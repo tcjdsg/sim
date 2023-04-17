@@ -1,0 +1,73 @@
+import numpy as np
+
+#Order(i + 1, duration, resource, pre)
+class Order(object):
+    '''
+    活动类：包含  1.活动总ID  、舰载机活动Id，舰载机Id
+    2.活动持续时间    3.活动资源需求量   4.活动紧前活动
+     5.活动最早开始时间  6.活动最晚开始时间  7.活动是否被访问
+    '''
+
+    def __init__(self, id,taskid, duration, resourceRequestH,resourceRequestS, successor,jzjId):
+        self.id = id
+        self.taskid = taskid
+        self.belong_plane_id = jzjId
+
+        self.duration = duration
+        self.resourceRequestH = np.array(resourceRequestH)
+        self.resourceRequestS = np.array(resourceRequestS)
+        self.predecessor = None
+        self.successor = successor
+        self.es = 0
+        self.ef = 0
+        self.ls = 0
+        self.lf = 0
+        self.tf = 0
+
+        self.visited = False
+        self.complete = False
+        self.HumanReady = True
+        self.working = False
+
+        self.TimeStart = 0
+        self.TimeEnd = self.TimeStart + self.duration
+        self.HumanNums = [] #执行任务的人员编号
+        self.SNums = [] #执行任务编号
+
+
+class Activity(object):
+    '''
+    活动类：包含  1.活动总ID  、舰载机活动Id，舰载机Id
+    2.活动持续时间    3.活动资源需求量   4.活动紧前活动
+     5.活动最早开始时间  6.活动最晚开始时间  7.活动是否被访问
+    '''
+
+    def __init__(self, id, taskid, duration, resourceRequestH, resourceRequestS, successor, jzjId):
+        self.id = id
+        self.taskid = taskid
+        self.belong_plane_id = jzjId
+
+
+        self.duration = duration
+        self.resourceRequestH = np.array(resourceRequestH)
+        self.resourceRequestS = np.array(resourceRequestS)
+        self.predecessor = None
+        self.successor = successor
+        self.es = 0
+        self.ef = 0
+        self.ls = 0
+        self.lf = 0
+        self.tf = 0
+
+        self.visited = False
+        self.complete = False
+        self.HumanReady = True
+        self.working = False
+
+        self.TimeStart = 0
+        self.TimeEnd = self.TimeStart + self.duration
+        self.HumanNum = [] #执行任务的人员编号
+
+
+
+
