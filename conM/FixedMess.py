@@ -21,7 +21,7 @@ class FixedMes(object):
     jzjNumbers=[1,2,3,4,5,6,7,8]  #舰载机编号
 
 
-    Human_resource_type = 4  #四种人，和加油站
+    Human_resource_type = 10 #四种人，和加油站
     total_Huamn_resource = [4, 5, 9, 12]  # 每种人员数量
 
     constraintOrder = defaultdict(lambda: []) #记录每类人的可作用工序，和可作用舰载机范围
