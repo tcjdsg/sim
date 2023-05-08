@@ -118,7 +118,6 @@ class Ga(object):
         return res
 
 
-
     def writeArrayList(self,dcNextAll , nowHuman):
         ds = "output/paretoFor0" + nowHuman + ".txt"
         aimValue = 5
@@ -213,5 +212,5 @@ class Ga(object):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-   g=Ga("C:/Users/29639/Desktop/dis.csv","C:/Users/29639/Desktop/order.txt")
+   g=Ga("C:/Users/29639/Desktop/sim/dis.csv","C:/Users/29639/Desktop/sim/dis.csv")
    g.Run()

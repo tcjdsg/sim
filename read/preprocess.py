@@ -55,9 +55,6 @@ class InitM(object):
         index = 0
 
         # 构建任务网络
-
-
-
         for i in range(FixedMes.planeNum):
             jzjNumber = FixedMes.jzjNumbers[i]
             for j in range(FixedMes.planeOrderNum):
@@ -65,14 +62,21 @@ class InitM(object):
                 taskId = j+1
                 duration = FixedMes.OrderTime[taskId]
                 resourceH = [0 for _ in range(FixedMes.Human_resource_type)]
-
+                # nt()pri
                 resourceH[FixedMes.OrderInputMes[taskId][0][0]] = FixedMes.OrderInputMes[taskId][0][1]
+
+
                 resourceS = [0 for _ in range(FixedMes.station_resource_type)]
                 resourceS[FixedMes.OrderInputMes[taskId][1][0]] = FixedMes.OrderInputMes[taskId][1][1]
+
+                resourceSpace = [0 for _ in range(FixedMes.space_resource_type)]
+                if FixedMes.OrderInputMes[taskId][2][1]>0:
+                    resourceSpace[jzjNumber-1] = FixedMes.OrderInputMes[taskId][2][1]
+
                 SUCOrder = [num+(FixedMes.planeOrderNum)*i for num in FixedMes.SUCOrder[taskId]]
                 SUCOrder.append((FixedMes.planeOrderNum)*FixedMes.planeNum+1)
 
-                task = Order(index, taskId,duration, resourceH,resourceS,SUCOrder,jzjNumber)
+                task = Order(index, taskId,duration, resourceH,resourceS,resourceSpace,SUCOrder,jzjNumber)
 
                 activities[index] = task
                 for s in SUCOrder:
@@ -84,17 +88,18 @@ class InitM(object):
         SUCOrder = [i for i in range(1, FixedMes.Activity_num)]
         resourceH = [0 for _ in range(FixedMes.Human_resource_type)]
         resourceS = [0 for _ in range(FixedMes.station_resource_type)]
+        resourceSpace = [0 for _ in range(FixedMes.space_resource_type)]
 
-        activities[0] = Order(0, 0, 0, resourceH, resourceS, SUCOrder, 0)
+        activities[0] = Order(0, 0, 0, resourceH, resourceS, resourceSpace,SUCOrder, 0)
         activities[0].predecessor = []
-        activities[index+1] = Order(0, 0, 0, resourceH, resourceS, [], 0)
+        activities[index+1] = Order(0, 0, 0, resourceH, resourceS, resourceSpace,[], 0)
         activities[index+1].predecessor = [i for i in range(FixedMes.Activity_num-1)]
         return  activities
         # 活动数int， 资源数int， 资源限量np.array， 所有活动集合dic{活动代号：活动对象}
 
 
 if __name__ == '__main__':
-    m = InitM("C:/Users/29639/Desktop/dis.csv","C:/Users/29639/Desktop/order.txt")
+    m = InitM("C:/Users/29639/Desktop/sim/dis.csv","C:/Users/29639/Desktop/sim/dis.csv")
     m.readDis()
     m.readData()
     print()

@@ -8,7 +8,7 @@ class Order(object):
      5.活动最早开始时间  6.活动最晚开始时间  7.活动是否被访问
     '''
 
-    def __init__(self, id,taskid, duration, resourceRequestH,resourceRequestS, successor,jzjId):
+    def __init__(self, id,taskid, duration, resourceRequestH,resourceRequestS,resourceRequestSpace, successor,jzjId):
         self.id = id
         self.taskid = taskid
         self.belong_plane_id = jzjId
@@ -16,6 +16,7 @@ class Order(object):
         self.duration = duration
         self.resourceRequestH = np.array(resourceRequestH)
         self.resourceRequestS = np.array(resourceRequestS)
+        self.resourceRequestSpace = np.array(resourceRequestSpace)
         self.predecessor = None
         self.successor = successor
         self.es = 0
@@ -42,7 +43,7 @@ class Activity(object):
      5.活动最早开始时间  6.活动最晚开始时间  7.活动是否被访问
     '''
 
-    def __init__(self, id, taskid, duration, resourceRequestH, resourceRequestS, successor, jzjId):
+    def __init__(self, id,taskid, duration, resourceRequestH,resourceRequestS,resourceRequestSpace, successor,jzjId):
         self.id = id
         self.taskid = taskid
         self.belong_plane_id = jzjId
@@ -51,6 +52,7 @@ class Activity(object):
         self.duration = duration
         self.resourceRequestH = np.array(resourceRequestH)
         self.resourceRequestS = np.array(resourceRequestS)
+        self.resourceRequestSpace = np.array(resourceRequestSpace)
         self.predecessor = None
         self.successor = successor
         self.es = 0

@@ -15,20 +15,25 @@ class FixedMes(object):
     numHumanAll = [18,60]
 
     planeOrderNum = 16
-    planeNum = 8
+    planeNum = 4
 
 
-    jzjNumbers=[1,2,3,4,5,6,7,8]  #舰载机编号
+    jzjNumbers=[1,2,3,4]  #舰载机编号
 
 
-    Human_resource_type = 10 #四种人，和加油站
-    total_Huamn_resource = [4, 5, 9, 12]  # 每种人员数量
+    Human_resource_type = 1 #先考虑只有一类人
 
+    #先不考虑技能匹配。。就十几个人
+    # total_Huamn_resource = [4, 5, 9, 12]  # 每种人员数量
+    total_Huamn_resource = [12]
     constraintOrder = defaultdict(lambda: []) #记录每类人的可作用工序，和可作用舰载机范围
-    constraintOrder[0] = [ 1, 2, 5]
-    constraintOrder[1] = [3,4, 16]
-    constraintOrder[2] = [7, 8, 14]
-    constraintOrder[3] = [6, 9, 10, 11,12,13,15]
+    constraintOrder[0] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+
+    # constraintOrder[0] = [ 1, 2, 5]
+    # constraintOrder[1] = [3,4, 16]
+    # constraintOrder[2] = [7, 8, 14]
+    # constraintOrder[3] = [6, 9, 10, 11,12,13,15]
+
 
 
     modeflag = 0 #0是单机、1是全甲板，这里考虑全甲板，如果是全甲板
@@ -36,6 +41,15 @@ class FixedMes(object):
 
     station_resource_type = 5
     total_station_resource = [7,16,6,6,8]
+
+    #飞机数量比较少的时候，这些燃料资源的限制约束不起作用。
+    total_renew_resource = [5,8,2,4,6]
+
+    #座舱限制。相当于是每个站位都有一个座舱，每个舰载机只能用自己座舱。
+    space_resource_type = 8
+    total_space_resource = [1,1,1,1,1,1,1,1]
+
+
     constraintS_Order = defaultdict(lambda: [])  # 记录每类设备的可作用工序，和可作用舰载机范围
 
      # 设备保障范围约束
@@ -106,27 +120,24 @@ class FixedMes(object):
     SUCOrder[15] = [16]
     SUCOrder[16] = []
 
-    #    constraintOrder[0] = [ 1, 2, 5]
-    #     constraintOrder[1] = [3,4, 16]
-    #     constraintOrder[2] = [7, 8, 14]
-    #     constraintOrder[3] = [6, 9, 10, 11,12,13,15]
+    #加一个空间资源,空间资源的种类在这里体现不出来。因为跟舰载机号有关。
     OrderInputMes = [[],
-                     [(0, 1), (0, 0)],  # 1
-                     [(0, 1), (1, 1)],  # 2
-                     [(1, 1), (0, 0)],  #3
-                     [(1, 1), (1, 1)],  # 4
-                      [(0, 2), (2, 1)],  # 5
-                       [(3, 2), (0, 1)],  # 6需要加油站
-                    [(2, 2), (0, 0)],  # 7,
-                  [(2, 1), (1, 1)],  # 8
-                 [(3, 1), (0, 0)],  # 9
-                  [(3, 2), (3, 1)],  # 10
-                 [(3, 1), (0, 0)],  # 11
-                 [(3, 1), (0, 0)],  # 12
-                [(3, 1), (4, 1)],  # 13
-                [(2, 1), (0, 0)] , # 14
-                [(3, 1), (4, 1)]  ,# 15
-                [(1, 1), (1, 1)]  # 16
+                     [(0, 1), (0, 0), (0,0)],  # 1
+                     [(0, 1), (1, 1), (0,1)],  # 2
+                     [(0, 1), (0, 0),(0,0)],  #3
+                     [(0, 1), (1, 1),(0,0)],  # 4
+                      [(0, 2), (2, 1),(0,0)],  # 5
+                       [(0, 2), (0, 1),(0,0)],  # 6需要加油站
+                    [(0, 2), (0, 0),(0,0)],  # 7,
+                  [(0, 1), (1, 1),(0,1)],  # 8
+                 [(0, 1), (0, 0),(0,0)],  # 9
+                  [(0, 2), (3, 1),(0,0)],  # 10
+                 [(0, 1), (0, 0),(0,0)],  # 11
+                 [(0, 1), (0, 0),(0,0)],  # 12
+                [(0, 1), (4, 1),(0,1)],  # 13
+                [(0, 1), (0, 0),(0,0)] , # 14
+                [(0, 1), (4, 1),(0,1)]  ,# 15
+                [(0, 1), (1, 1),(0,1)]  # 16
                        ]
     #16位 为了让虚拟从1开始
     OrderTime = [0,
@@ -200,6 +211,7 @@ class FixedMes(object):
     Allactivity = []
     constraintHuman =[]
     constraintStation=[]
+    constraintSpace = []
 
     humanNum = 0
     targetWeight =[1,0.3,0.1]
@@ -214,6 +226,7 @@ class FixedMes(object):
 
         for i in range(cls.planeOrderNum):
             cls.keyChainOrder.append(set())
+
         num=0
         for i in range(len(cls.total_Huamn_resource)):
             cls.constraintHuman.append([])
@@ -227,6 +240,13 @@ class FixedMes(object):
             for j in range(cls.total_station_resource[i]):
                 num+=1
                 cls.constraintStation[i].append(num)
+
+        num = 0
+        for i in range(len(cls.total_space_resource)):
+            cls.constraintSpace.append([])
+            for j in range(cls.total_space_resource[i]):
+                num+=1
+                cls.constraintSpace[i].append(num)
 
 
 

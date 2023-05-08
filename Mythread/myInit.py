@@ -20,6 +20,7 @@ from chromosome.Chromo import Chromosome
 from conM.FixedMess import FixedMes
 from human.Human import Human
 from read.preprocess import InitM
+from space.Space import Space
 from station.Station import Station
 
 
@@ -65,8 +66,9 @@ class MyInit(object):
             iter.setcodes(codes)
             humanState = []
             stationState = []
+            spaceState= []
             orderState = defaultdict(list)
-            MyInit.fitness(iter, humanState, stationState)
+            MyInit.fitness(iter, humanState, stationState,spaceState)
 
 
             if(iter.WorkTime<FixedMes.lowTime):
@@ -129,17 +131,17 @@ class MyInit(object):
     '''
 
     @staticmethod
-    def fitness(iter,Humans,Stations):
-        MyInit.initMess(Humans,Stations)
+    def fitness(iter,Humans,Stations,Spaces):
+        MyInit.initMess(Humans,Stations,Spaces)
         # initMessOrder(Orders, activities)
-        MyInit.serialGenerationScheme(FixedMes.act_info,iter, Humans,Stations)
+        MyInit.serialGenerationScheme(FixedMes.act_info,iter, Humans,Stations,Spaces)
         iter.WorkTime,iter.variance,iter.movetime = MyInit.decoder(Humans,FixedMes.act_info)
         iter.setf()
-        return Humans,Stations
+        return Humans,Stations,Spaces
 
 
     @staticmethod
-    def initMess(Humans,Stations):
+    def initMess(Humans,Stations,Spaces):
         number = 0
 
         for i in range(FixedMes.Human_resource_type):
@@ -158,6 +160,15 @@ class MyInit(object):
                 # ij都是从0开头 ,number也是
                 Stations[i].append(Station([i,j,number]))
                 number += 1
+
+        number = 0
+
+        for i in range(FixedMes.space_resource_type):
+            Spaces.append([])
+            for j in range(FixedMes.total_space_resource[i]):
+                # ij都是从0开头 ,number也是
+                Spaces[i].append(Space(j))
+
 
     @staticmethod
     def initMessOrder(Orders,activities):
@@ -178,12 +189,13 @@ class MyInit(object):
     :return:
     '''
     @staticmethod
-    def serialGenerationScheme(allTasks, iter, humans,stations):
+    def serialGenerationScheme(allTasks, iter, humans,stations,spaces):
 
         # 记录资源转移
         priorityToUse = iter.codes.copy()
         resourceAvailH = FixedMes.total_Huamn_resource
         resourceAvailS = FixedMes.total_station_resource
+        resourceAvailSpace = FixedMes.total_space_resource
 
         ps = [0]  # 局部调度计划初始化
 
@@ -207,18 +219,76 @@ class MyInit(object):
             # 检查满足资源限量约束的时间点作为活动最早开始时间，即在这一时刻同时满足活动逻辑约束和资源限量约束
             t = startTime+1
 
-            resourceSumH = np.zeros(len(resourceAvailH))
+
             recordH = [[] for _ in range(len(resourceAvailH))]
-            resourceSumS = np.zeros(len(resourceAvailS))
+
             recordS = [[] for _ in range(len(resourceAvailS))]
+            recordSpace = [[] for _ in range(len(resourceAvailSpace))]
 
             # 计算t时刻正在进行的活动的资源占用总量,当当前时刻大于活动开始时间小于等于活动结束时间时，说明活动在当前时刻占用资源
             while t > startTime :
 
                 resourceSumH = np.zeros(len(resourceAvailH))
                 recordH = [[] for _ in range(len(resourceAvailH))]
+
                 resourceSumS = np.zeros(len(resourceAvailS))
                 recordS = [[] for _ in range(len(resourceAvailS))]
+
+                resourceSumNew = np.zeros(len(resourceAvailS))
+
+                resourceSumSpace = np.zeros(len(resourceAvailSpace))
+                recordSpace = [[] for _ in range(len(resourceAvailSpace))]
+
+                #第舰载机的座舱资源
+                if allTasks[selectTaskID].resourceRequestSpace[now_pos-1]>0:
+                      for space in spaces[now_pos-1]:
+
+                          if (len(space.OrderOver) == 0):
+                              resourceSumSpace[now_pos-1] += 1  # 该类资源可用+1
+
+
+                          if (len(space.OrderOver) == 1):
+                              Activity1 = space.OrderOver[0]
+
+                              # movetime1 = 0 if from_pos == 0 else FixedMes.distance[from_pos][
+                              #                                         now_pos] / FixedMes.human_walk_speed
+                              # movetime2 = 0 if to_pos == 0 else FixedMes.distance[to_pos][
+                              #                                       now_pos] / FixedMes.human_walk_speed
+
+                              if (Activity1.ef +0.01 ) <= t \
+                                      or (t + dur + 0.01) <= (Activity1.es):
+                                  resourceSumSpace[now_pos-1] += 1  # 该类资源可用+1
+
+
+                        #遍历船员工序，找到可能可以插入的位置,如果船员没有工作，人力资源可用
+                          if(len(space.OrderOver)>=2):
+                              flag = False
+                              for taskIndex in range(len(space.OrderOver)-1):
+                                  Activity1 = space.OrderOver[taskIndex]
+                                  Activity2 = space.OrderOver[taskIndex+1]
+
+                                  # from_pos = Activity1.belong_plane_id
+                                  # to_pos = Activity2.belong_plane_id
+                                  # movetime1 = 0 if from_pos==0 else FixedMes.distance[from_pos][now_pos]/FixedMes.human_walk_speed
+                                  # movetime2 = 0 if to_pos==0 else FixedMes.distance[to_pos][now_pos]/FixedMes.human_walk_speed
+
+                                  if (Activity1.ef + 0.01) <= t \
+                                     and (t + dur + 0.01 ) <= (Activity2.es):
+                                       flag=True
+                                       resourceSumSpace[now_pos-1] += 1  # 该类资源可用+1
+
+                                       break
+
+                              if flag==False:
+                                  Activity1 = space.OrderOver[0]
+                                  Activity2 = space.OrderOver[-1]
+
+
+                                  if (Activity2.ef + 0.01 ) <= t \
+                                          or (t + dur + 0.01) <= (Activity1.es):
+                                      resourceSumSpace[now_pos-1]  += 1  # 该类资源可用+1
+                                      # recordH[type].append(human)
+
 
                 for type in range(len(resourceAvailH)):
                     if allTasks[selectTaskID].resourceRequestH[type]>0:
@@ -275,52 +345,71 @@ class MyInit(object):
                                           or (t + dur + 1) <= (Activity1.es - round(movetime1,1)):
                                       resourceSumH[type] += 1  # 该类资源可用+1
                                       recordH[type].append(human)
-
+                renewFlag = True
                 for type in range(len(resourceAvailS)):
                     if allTasks[selectTaskID].resourceRequestS[type]>0:
-                      for station in stations[type]:
+
+                        renewFlag = True
+
+                        for station in stations[type]:
+
+                            # 找到当前所有正在工作的设备，计算资源占用数
+                            for taskIndex in range(len(station.OrderOver)):
+                                renewActivity = station.OrderOver[taskIndex]
+
+                                #说明此刻 油料等资源在使用
+                                if t > renewActivity.es and t < renewActivity.ef:
+                                    resourceSumNew[type] += 1 # 该类资源可用+1
+                                    break
+
+                        if resourceSumNew[type]==FixedMes.total_renew_resource[type]:
+                            renewFlag = False #满了
+
+
+                        if renewFlag==True:
+                            for station in stations[type]:
                           # 舰载机在这个加油站的覆盖范围内：
-                          if now_pos in FixedMes.constraintS_JZJ[type][station.zunumber]:
+                                if now_pos in FixedMes.constraintS_JZJ[type][station.zunumber]:
 
-                              if (len(station.OrderOver) == 0):
-                                  resourceSumS[type] += 1  # 该类资源可用+1
-                                  recordS[type].append(station)
+                                    if (len(station.OrderOver) == 0):
+                                        resourceSumS[type] += 1  # 该类资源可用+1
+                                        recordS[type].append(station)
 
-                              if (len(station.OrderOver) == 1):
-                                  Activity1 = station.OrderOver[0]
+                                    if (len(station.OrderOver) == 1):
+                                        Activity1 = station.OrderOver[0]
 
-                                  if (Activity1.ef + 1 ) <= t \
-                                          or (t + dur + 1) <= (Activity1.es):
-                                      resourceSumS[type] += 1  # 该类资源可用+1
-                                      recordS[type].append(station)
+                                        if (Activity1.ef + 0.01 ) <= t \
+                                          or (t + dur + 0.01) <= (Activity1.es):
+                                            resourceSumS[type] += 1  # 该类资源可用+1
+                                            recordS[type].append(station)
 
-                              if (len(station.OrderOver) >= 2):
-                                  flag = False
-                                  for taskIndex in range(len(station.OrderOver)-1):
-                                      Activity1 = station.OrderOver[taskIndex]
-                                      Activity2 = station.OrderOver[taskIndex+1]
+                                    if (len(station.OrderOver) >= 2):
+                                        flag = False
+                                        for taskIndex in range(len(station.OrderOver)-1):
+                                            Activity1 = station.OrderOver[taskIndex]
+                                            Activity2 = station.OrderOver[taskIndex+1]
 
                                # from_pos = Activity1.belong_plane_id
                                # to_pos = Activity2.belong_plane_id
                                # movetime1 = 0 if from_pos==0 else FixedMes.distance[from_pos][now_pos]*FixedMes.human_walk_speed
                                # movetime2 = 0 if to_pos==0 else FixedMes.distance[to_pos][now_pos]*FixedMes.human_walk_speed
 
-                                      if (Activity1.ef + 1) <= t \
-                                        and (t + dur + 1 ) <= (Activity2.es):
-                                        resourceSumS[type] += 1  # 该类资源可用+1
-                                        recordS[type].append(station)
-                                        flag = True
-                                  if flag == False:
-                                      Activity1 = station.OrderOver[-1]
-                                      Activity2 = station.OrderOver[0]
+                                            if (Activity1.ef + 0.01) <= t \
+                                        and (t + dur + 0.01 ) <= (Activity2.es):
+                                                resourceSumS[type] += 1  # 该类资源可用+1
+                                                recordS[type].append(station)
+                                                flag = True
+                                        if flag == False:
+                                            Activity1 = station.OrderOver[-1]
+                                            Activity2 = station.OrderOver[0]
 
-                                      if (Activity1.ef + 1 ) <= t or (t + 1 +dur) <= Activity2.es:
-                                          resourceSumS[type] += 1
-                                          recordS[type].append(station)
+                                            if (Activity1.ef + 0.01 ) <= t or (t + 0.01 +dur) <= Activity2.es:
+                                                resourceSumS[type] += 1
+                                                recordS[type].append(station)
 
 
                 # 若资源不够，则向后推一个单位时间
-                if (resourceSumH < allTasks[selectTaskID].resourceRequestH).any() or (resourceSumS < allTasks[selectTaskID].resourceRequestS).any() :
+                if renewFlag==False or ((resourceSumSpace < allTasks[selectTaskID].resourceRequestSpace).any()) or (resourceSumH < allTasks[selectTaskID].resourceRequestH).any() or (resourceSumS < allTasks[selectTaskID].resourceRequestS).any() :
                         t += 1
                 else:
                     break
@@ -360,6 +449,18 @@ class MyInit(object):
                     # 更新
                     stations[type][index].update(allTasks[selectTaskID])
                     # allTasks[selectTaskID].SNums.append(stations[type][index].number)
+                    need -= 1
+
+
+
+            need = allTasks[selectTaskID].resourceRequestSpace[now_pos-1]
+            if need > 0:
+
+                    index = 0
+
+                    # 更新人员
+                    spaces[now_pos-1][index].update(allTasks[selectTaskID])
+                    # allTasks[selectTaskID].HumanNums.append(humans[type][index].number)
                     need -= 1
 
             # 局部调度计划ps

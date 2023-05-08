@@ -32,7 +32,8 @@ class MyRun(object):
             NDset = fast_non_dominated_sort(FixedMes.AllFit)
             Human = []
             S = []
-            h,s=MyInit.fitness(NDset[0][0], Human, S)
+            space=[]
+            h,s,sp=MyInit.fitness(NDset[0][0], Human, S,space)
             # Draw_gantt(h)
 
     def select(self):
@@ -153,9 +154,9 @@ class MyRun(object):
                         break
             # print(i,i+1,len(temp2))
         pop1.codes = temp1.tolist()
-        MyInit.fitness(pop1,[],[])
+        MyInit.fitness(pop1,[],[],[])
         pop2.codes = temp2.tolist()
-        MyInit.fitness(pop2, [], [])
+        MyInit.fitness(pop2, [], [],[])
 
         return pop1,pop2
 
@@ -267,7 +268,7 @@ class MyRun(object):
         if (num + 1) == x2:
             number5 = x2
             a.insert(number5, newcode[-1])
-        MyInit.fitness(newpop,[],[])
+        MyInit.fitness(newpop,[],[],[])
         return newpop
     # def var2(self,pop):
     #
@@ -406,7 +407,7 @@ class MyRun(object):
         print("var is", self.Pop[0].f[1])
 
 if __name__ == '__main__':
-    m = MyInit("C:/Users/29639/Desktop/dis.csv","C:/Users/29639/Desktop/order.txt")
+    m = MyInit("C:/Users/29639/Desktop/sim/dis.csv","C:/Users/29639/Desktop/sim/dis.csv")
     m.InitPopulation()
     run = MyRun()
     run.select()
@@ -415,7 +416,7 @@ if __name__ == '__main__':
 
     nwee = run.var1(ppp)
     run.updata()
-    m.fitness(nwee,[],[])
+    m.fitness(nwee,[],[],[])
 
 
     print(nwee.codes==ppp.codes)
