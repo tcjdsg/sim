@@ -56,8 +56,6 @@ class InitM(object):
 
         # 构建任务网络
 
-
-
         for i in range(FixedMes.planeNum):
             jzjNumber = FixedMes.jzjNumbers[i]
             for j in range(FixedMes.planeOrderNum):

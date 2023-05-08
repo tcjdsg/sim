@@ -27,6 +27,7 @@ class Ga(object):
 
 
         while self.DCmin>0:
+
             self.DCmin-=1
             oldHuman = copy.deepcopy(FixedMes.total_Huamn_resource)
             Num = Num+1

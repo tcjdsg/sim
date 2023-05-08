@@ -25,6 +25,7 @@ class FixedMes(object):
     total_Huamn_resource = [4, 5, 9, 12]  # 每种人员数量
 
     constraintOrder = defaultdict(lambda: []) #记录每类人的可作用工序，和可作用舰载机范围
+
     constraintOrder[0] = [ 1, 2, 5]
     constraintOrder[1] = [3,4, 16]
     constraintOrder[2] = [7, 8, 14]
@@ -48,6 +49,7 @@ class FixedMes(object):
                           [9, 10, 11],
                           [12, 13, 14],
                           [14, 15, 16]]
+
     constraintS_JZJ[1] = [[1],
                           [2],
                           [3],
@@ -160,7 +162,7 @@ class FixedMes(object):
     human_walk_speed = 80 #人员行走速度8 m/(in)
 
     populationnumber = 10
-    ge = 4
+    ge = 9
 
     threadNum = 1
     populationnumberson = populationnumber/threadNum
