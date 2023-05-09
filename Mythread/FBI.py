@@ -10,6 +10,7 @@ from  Mythread.myInit import MyInit
 from activity.Activitity import Order
 
 from conM.FixedMess import FixedMes
+from draw.people import Draw_gantt
 from human.Human import Human
 
 
@@ -344,6 +345,7 @@ if __name__ == "__main__":
                 allTasks[act].predecessor = tmp4
                 allTasks[act].successor = tmp3
 
+
         resourceAvailH = [2]
         resourceAvailS = [0]
 
@@ -367,7 +369,7 @@ if __name__ == "__main__":
 
             recordH = [[] for _ in range(len(resourceAvailH))]
 
-            recordS = [[] for _ in range(len(resourceAvailS))]
+            # recordS = [[] for _ in range(len(resourceAvailS))]
 
             # 计算t时刻正在进行的活动的资源占用总量,当当前时刻大于活动开始时间小于等于活动结束时间时，说明活动在当前时刻占用资源
             while t > startTime:
@@ -390,8 +392,8 @@ if __name__ == "__main__":
                                 movetime1 = 0
                                 movetime2 = 0
 
-                                if (Activity1.ef + 1 + round(movetime1, 1)) <= t \
-                                        or (t + dur + 1) <= (Activity1.es - round(movetime2, 1)):
+                                if (Activity1.ef + 0.001 + round(movetime1, 1)) <= t \
+                                        or (t + dur +  0.001) <= (Activity1.es - round(movetime2, 1)):
                                     resourceSumH[type] += 1  # 该类资源可用+1
                                     recordH[type].append(human)
 
@@ -407,8 +409,8 @@ if __name__ == "__main__":
                                     movetime1 = 0
                                     movetime2 = 0
 
-                                    if (Activity1.ef + 1 + round(movetime1, 1)) <= t \
-                                            and (t + dur + 1) <= (Activity2.es - round(movetime2, 1)):
+                                    if (Activity1.ef +  0.001 + round(movetime1, 1)) <= t \
+                                            and (t + dur +  0.001) <= (Activity2.es - round(movetime2, 1)):
                                         flag = True
                                         resourceSumH[type] += 1  # 该类资源可用+1
                                         recordH[type].append(human)
@@ -422,13 +424,13 @@ if __name__ == "__main__":
                                     movetime2 = 0
                                     movetime1 = 0
 
-                                    if (Activity2.ef + 1 + round(movetime2, 1)) <= t \
-                                            or (t + dur + 1) <= (Activity1.es - round(movetime1, 1)):
+                                    if (Activity2.ef +  0.001 + round(movetime2, 1)) <= t \
+                                            or (t + dur +  0.001) <= (Activity1.es - round(movetime1, 1)):
                                         resourceSumH[type] += 1  # 该类资源可用+1
                                         recordH[type].append(human)
 
                 if (resourceSumH < allTasks[selectTaskID].resourceRequestH).any():
-                    t += 1
+                    t += 0.1
                 else:
                     break
             # 若符合资源限量则将当前活动开始时间安排在这一时刻
@@ -494,8 +496,6 @@ if __name__ == "__main__":
                 allTasks[act].ef = (0 - tmp1) + maxtime
                 allTasks[act].predecessor = tmp4
                 allTasks[act].successor = tmp3
-
-
 
         # 更新codes
         for taskcode in codes[0]:
@@ -600,137 +600,56 @@ if __name__ == "__main__":
     # codes = encoderReal(activities)
     codes=[[[0,0],[1,3],[2,0],[3,2],[4,0],[5,7],[6,5],[7,11],[8,11],[9,12],[10,16]],
            [[0,0],[1,5],[2,3],[3,3],[4,2],[5,11],[6,7],[7,12],[8,14],[9,16],[10,16]]]
+    from matplotlib import pyplot as plt
+    import matplotlib.patches as mpatches
+
+    from conM.FixedMess import FixedMes
+
+
+    def Draw_gantt(all_people):
+        colors = ['b', 'c', 'g', 'k', 'm', 'r', 'y', 'grey', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8']
+        number = 0
+        for i in range(len(all_people)):
+            for j in range(len(all_people[i])):
+                index=j+1
+
+
+                for order in all_people[i][j].OrderOver:
+
+                    gongxu = order.taskid
+                    time1 = order.es
+                    time2 = order.ef
+
+                    if (time2 - time1) != 0:
+                        print(int(time2) - int(time1))
+                        plt.barh(int(index), int(time2) - int(time1),
+                                 left=int(time1), color=colors[gongxu])
+                    news = str(gongxu)
+                    infmt = '(' + news + ')'
+                    if (time2 - time1) != 0:
+                        plt.text(x=int(time1), y=int(index) - 0.1, s=infmt, fontsize=8,
+                                 color='white')
+
+        # plt.yticks([i + 1 for i in range(people_number)])
+        plt.show()
+
     leftAndRight(codes, activities, Humans, [], [], "left")
-    print(codes[0])
-    print(codes[1])
+
+    Humans=[[]]
+    Humans[0].append(Human([0, 0, 0]))
+    Humans[0].append(Human([0, 1, 1]))
     leftAndRight(codes, activities, Humans, [], [], "right")
-    print(codes[0])
-    print(codes[1])
+
+
+    Humans = [[]]
+    Humans[0].append(Human([0, 0, 0]))
+    Humans[0].append(Human([0, 1, 1]))
+
     leftAndRight(codes, activities, Humans, [], [], "left")
+    Draw_gantt(Humans)
+
+
 
     # 活动数int， 资源数int， 资源限量np.array， 所有活动集合dic{活动代号：活动对象}
 
-
-
-
-# import copy
-#
-# # 定义任务和资源类
-# class Task:
-#     def __init__(self, name, duration, resource_req):
-#         self.name = name
-#         self.duration = duration
-#         self.resource_req = resource_req
-#         self.successors =[]
-#         self.predecessors=[]
-#
-# class Resource:
-#     def __init__(self, name, capacity):
-#         self.name = name
-#         self.capacity = capacity
-#
-# # 定义调度类
-# class Schedule:
-#     def __init__(self, tasks, resources):
-#         self.tasks = tasks
-#         self.resources = resources
-#         self.task_seq = []  # 调度顺序
-#         self.task_map = {}  # 任务和时间的对应关系
-#         self.makespan = float("inf")  # 完成时间
-#
-#     # 更新调度结果
-#     def update(self, task_seq):
-#         task_map = {}
-#         time_map = {}
-#         for task in task_seq:
-#             earliest_start_time = max([time_map[pre] + pre.duration for pre in task.predecessors]) if len(task.predecessors) > 0 else 0
-#             latest_finish_time = min([task_map[suc] - suc.duration for suc in task.successors]) if len(task.successors) > 0 else float("inf")
-#             start_time = max(earliest_start_time, latest_finish_time)
-#             end_time = start_time + task.duration
-#             task_map[task] = end_time
-#             time_map[end_time] = task
-#         makespan = max([end_time for end_time in task_map.values()])
-#         if makespan < self.makespan:
-#             self.task_seq = task_seq
-#             self.task_map = task_map
-#             self.makespan = makespan
-#
-#     # 从前往后的调度
-#     def forward_pass(self):
-#         task_seq = sorted(self.tasks, key=lambda x: -x.duration)
-#         for task in task_seq:
-#             earliest_start_time = max([self.task_map[pre] + pre.duration for pre in task.predecessors]) if len(task.predecessors) > 0 else 0
-#             finish_time = earliest_start_time + task.duration
-#             while True:
-#                 # 判断资源是否可用
-#                 resource_available = all(sum([t.resource_req[r] for t in self.task_seq if t != task and end >= self.task_map[t] and start <= self.task_map[t]]) + task.resource_req[r] <= r.capacity for r in self.resources)
-#                 if not resource_available:
-#                     finish_time += 1
-#                     continue
-#                 break
-#             task_seq.remove(task)
-#             task_seq.append(task)
-#             self.update(task_seq)
-#
-#     # 从后往前的调度
-#     def backward_pass(self):
-#         task_seq = sorted(self.tasks, key=lambda x: x.duration)
-#         for task in task_seq:
-#             latest_finish_time = min([self.task_map[suc] - suc.duration for suc in task.successors]) if len(task.successors) > 0 else float("inf")
-#             start_time = latest_finish_time - task.duration
-#             while True:
-#                 # 判断资源是否可用
-#                 resource_available = all(sum([t.resource_req[r] for t in self.task_seq if t != task and end >= self.task_map[t] and start <= self.task_map[t]]) + task.resource_req[r] <= r.capacity for r in self.resources)
-#                 if not resource_available:
-#                     start_time -= 1
-#                     continue
-#                 break
-#             task_seq.remove(task)
-#             task_seq.insert(0, task)
-#             self.update(task_seq)
-#
-#     # 执行调度
-#     def execute(self):
-#         self.forward_pass()
-#         self.backward_pass()
-#
-# # 示例：创建并执行调度
-# if __name__ == "__main__":
-#     # 创建任务和资源
-#     tasks = [
-#         Task("A", 2, {Resource("Resource 1", 5): 1}),
-#         Task("B", 3, {Resource("Resource 2", 8): 1}),
-#         Task("C", 4, {Resource("Resource 3", 7): 1}),
-#         Task("D", 3, {Resource("Resource 4", 6): 1}),
-#         Task("E", 4, {Resource("Resource 2", 8): 1, Resource("Resource 4", 6): 1}),
-#         Task("F", 2, {Resource("Resource 1", 5): 1, Resource("Resource 3", 7): 1}),
-#         Task("G", 2, {Resource("Resource 1", 5): 1, Resource("Resource 4", 6): 1}),
-#         Task("H", 3, {Resource("Resource 2", 8): 1, Resource("Resource 3", 7): 1})
-#     ]
-#     tasks[0].successors = [tasks[4]]
-#     tasks[1].predecessors = [tasks[0], tasks[4]]
-#     tasks[2].predecessors = [tasks[1], tasks[4]]
-#     tasks[3].predecessors = [tasks[2]]
-#     tasks[4].predecessors = [tasks[0], tasks[1]]
-#     tasks[4].successors = [tasks[5], tasks[6], tasks[7]]
-#     tasks[5].predecessors = [tasks[4]]
-#     tasks[5].successors = [tasks[7]]
-#     tasks[6].predecessors = [tasks[4]]
-#     tasks[6].successors = [tasks[7]]
-#     tasks[7].predecessors = [tasks[4], tasks[5], tasks[6]]
-#     resources = [
-#         Resource("Resource 1", 5),
-#         Resource("Resource 2", 8),
-#         Resource("Resource 3", 7),
-#         Resource("Resource 4", 6)
-#     ]
-#
-#     # 创建调度器并执行调度
-#     schedule = Schedule(tasks, resources)
-#     schedule.execute()
-#     print(f"最小完成时间是 {schedule.makespan}。")
-#     for task in schedule.task_seq:
-#         start_time = schedule.task_map[task] - task.duration
-#         end_time = schedule.task_map[task]
-#         print(f"任务 {task.name} 在 {start_time} 时刻开始，{end_time} 时刻结束。")
 

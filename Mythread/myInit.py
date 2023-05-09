@@ -265,10 +265,6 @@ class MyInit(object):
                           if (len(space.OrderOver) == 1):
                               Activity1 = space.OrderOver[0]
 
-                              # movetime1 = 0 if from_pos == 0 else FixedMes.distance[from_pos][
-                              #                                         now_pos] / FixedMes.human_walk_speed
-                              # movetime2 = 0 if to_pos == 0 else FixedMes.distance[to_pos][
-                              #                                       now_pos] / FixedMes.human_walk_speed
 
                               if (Activity1.ef +0.01 ) <= t \
                                       or (t + dur + 0.01) <= (Activity1.es):
@@ -281,11 +277,6 @@ class MyInit(object):
                               for taskIndex in range(len(space.OrderOver)-1):
                                   Activity1 = space.OrderOver[taskIndex]
                                   Activity2 = space.OrderOver[taskIndex+1]
-
-                                  # from_pos = Activity1.belong_plane_id
-                                  # to_pos = Activity2.belong_plane_id
-                                  # movetime1 = 0 if from_pos==0 else FixedMes.distance[from_pos][now_pos]/FixedMes.human_walk_speed
-                                  # movetime2 = 0 if to_pos==0 else FixedMes.distance[to_pos][now_pos]/FixedMes.human_walk_speed
 
                                   if (Activity1.ef + 0.01) <= t \
                                      and (t + dur + 0.01 ) <= (Activity2.es):
@@ -322,8 +313,8 @@ class MyInit(object):
                               movetime2 = 0 if to_pos == 0 else FixedMes.distance[to_pos][
                                                                     now_pos] / FixedMes.human_walk_speed
 
-                              if (Activity1.ef + 1 + round(movetime1,1)) <= t \
-                                      or (t + dur + 1) <= (Activity1.es - round(movetime2,1)):
+                              if (Activity1.ef + 0.01 + round(movetime1,1)) <= t \
+                                      or (t + dur + 0.01) <= (Activity1.es - round(movetime2,1)):
                                   resourceSumH[type] += 1  # 该类资源可用+1
                                   recordH[type].append(human)
 
@@ -339,8 +330,8 @@ class MyInit(object):
                                   movetime1 = 0 if from_pos==0 else FixedMes.distance[from_pos][now_pos]/FixedMes.human_walk_speed
                                   movetime2 = 0 if to_pos==0 else FixedMes.distance[to_pos][now_pos]/FixedMes.human_walk_speed
 
-                                  if (Activity1.ef + 1 +  round(movetime1,1)) <= t \
-                                     and (t + dur + 1 ) <= (Activity2.es - round(movetime2,1)):
+                                  if (Activity1.ef + 0.01 +  round(movetime1,1)) <= t \
+                                     and (t + dur + 0.01) <= (Activity2.es - round(movetime2,1)):
                                        flag=True
                                        resourceSumH[type] += 1  # 该类资源可用+1
                                        recordH[type].append(human)
@@ -356,8 +347,8 @@ class MyInit(object):
                                   movetime1 = 0 if to_pos == 0 else FixedMes.distance[to_pos][
                                                                         now_pos] / FixedMes.human_walk_speed
 
-                                  if (Activity2.ef + 1 + round(movetime2,1)) <= t \
-                                          or (t + dur + 1) <= (Activity1.es - round(movetime1,1)):
+                                  if (Activity2.ef + 0.01 + round(movetime2,1)) <= t \
+                                          or (t + dur + 0.01) <= (Activity1.es - round(movetime1,1)):
                                       resourceSumH[type] += 1  # 该类资源可用+1
                                       recordH[type].append(human)
                 renewFlag = True
