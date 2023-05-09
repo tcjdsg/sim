@@ -33,21 +33,6 @@ class MyInit(object):
         FixedMes.my()
 
 
-
-        # num_activities, num_resource_type,
-        # total_resource, activities
-        # 活动数int， 资源数int， 资源限量np.array，
-        # 所有活动集合dic{活动代号：活动对象}
-        # FixedMes.my()
-        # FixedMes.distance = self.Init.readDis()
-        #
-        #
-        # self.activities= self.Init.readData()
-        # self.geneN = FixedMes.Activity_num
-        #
-        # FixedMes.act_info = self.activities
-
-
     def InitPopulation(self):
 
         FixedMes.distance = self.Init.readDis()
@@ -78,6 +63,36 @@ class MyInit(object):
                 num+=1
 
     def encoder(self):
+        numbers = len(self.activities)
+        cloneA = copy.deepcopy(self.activities)
+        chromosome = []
+        random_Ei_0 = 0
+
+        for a in range(numbers):
+            Ei_0 = []  # 紧前任务数为0的任务集编号
+            for key, Ei in cloneA.items():
+                prece = cloneA[key].predecessor
+                if prece is None:
+                    continue
+
+                Ei_number = len(prece)
+
+                if Ei_number == 0:
+                    Ei_0.append(key)
+            random.shuffle(Ei_0)
+            random_Ei_0 = Ei_0[0]
+            # self.taskid = taskid
+            # self.belong_plane_id = jzjId
+            chromosome.append([random_Ei_0,cloneA[random_Ei_0].belong_plane_id,cloneA[random_Ei_0].taskid])
+            for key, Ei in cloneA.items():
+                prece = cloneA[key].predecessor
+                if random_Ei_0 in prece:
+                    prece.remove(random_Ei_0)
+            del cloneA[random_Ei_0]
+        return chromosome
+
+    #按实数编码
+    def encoderReal(self):
         numbers = len(self.activities)
         cloneA = copy.deepcopy(self.activities)
         chromosome = []
@@ -192,7 +207,7 @@ class MyInit(object):
     def serialGenerationScheme(allTasks, iter, humans,stations,spaces):
 
         # 记录资源转移
-        priorityToUse = iter.codes.copy()
+        priorityToUse = iter.codes
         resourceAvailH = FixedMes.total_Huamn_resource
         resourceAvailS = FixedMes.total_station_resource
         resourceAvailSpace = FixedMes.total_space_resource
@@ -217,7 +232,7 @@ class MyInit(object):
 
             startTime = earliestStartTime
             # 检查满足资源限量约束的时间点作为活动最早开始时间，即在这一时刻同时满足活动逻辑约束和资源限量约束
-            t = startTime+1
+            t = startTime
 
 
             recordH = [[] for _ in range(len(resourceAvailH))]
