@@ -47,7 +47,7 @@ class MyInit(object):
         while num < FixedMes.populationnumber:
 
             iter = Chromosome()
-            codes = self.encoder()
+            codes = self.encoderReal()
             iter.setcodes(codes)
             humanState = []
             stationState = []
@@ -96,7 +96,10 @@ class MyInit(object):
         numbers = len(self.activities)
         cloneA = copy.deepcopy(self.activities)
         chromosome = []
+        right=[]
         random_Ei_0 = 0
+
+        index=0
 
         for a in range(numbers):
             Ei_0 = []  # 紧前任务数为0的任务集编号
@@ -113,13 +116,16 @@ class MyInit(object):
             random_Ei_0 = Ei_0[0]
             # self.taskid = taskid
             # self.belong_plane_id = jzjId
-            chromosome.append([random_Ei_0,cloneA[random_Ei_0].belong_plane_id,cloneA[random_Ei_0].taskid])
+            start = index+random.random()
+            chromosome.append([random_Ei_0,start])
+            right.append([random_Ei_0,start+self.activities[random_Ei_0].duration])
+            index+=1
             for key, Ei in cloneA.items():
                 prece = cloneA[key].predecessor
                 if random_Ei_0 in prece:
                     prece.remove(random_Ei_0)
             del cloneA[random_Ei_0]
-        return chromosome
+        return [chromosome,right]
     @staticmethod
     def decoder (Humans, acs):
         finishTimee = acs[FixedMes.Activity_num-1].ef
@@ -149,7 +155,7 @@ class MyInit(object):
     def fitness(iter,Humans,Stations,Spaces):
         MyInit.initMess(Humans,Stations,Spaces)
         # initMessOrder(Orders, activities)
-        MyInit.serialGenerationScheme(FixedMes.act_info,iter, Humans,Stations,Spaces)
+        MyInit.serialGenerationScheme(FixedMes.act_info,iter.codes, Humans,Stations,Spaces,"left")
         iter.WorkTime,iter.variance,iter.movetime = MyInit.decoder(Humans,FixedMes.act_info)
         iter.setf()
         return Humans,Stations,Spaces
@@ -204,10 +210,27 @@ class MyInit(object):
     :return:
     '''
     @staticmethod
-    def serialGenerationScheme(allTasks, iter, humans,stations,spaces):
+    def serialGenerationScheme(allTasks, codes, humans,stations,spaces,LR):
+
+        w=0.0001
+
+        if LR == "left":
+            code = sorted(codes[0], key=lambda x: x[1])
+        else:
+            code = sorted(codes[1], key=lambda x: -x[1])
+            maxtime = allTasks[code[0][0]].ef
+            for act in allTasks.keys():
+                tmp1 = allTasks[act].es
+                tmp2 = allTasks[act].ef
+                tmp3 = copy.deepcopy(allTasks[act].predecessor)
+                tmp4 = copy.deepcopy(allTasks[act].successor)
+                allTasks[act].es = (0 - tmp2) + maxtime
+                allTasks[act].ef = (0 - tmp1) + maxtime
+                allTasks[act].predecessor = tmp4
+                allTasks[act].successor = tmp3
 
         # 记录资源转移
-        priorityToUse = iter.codes
+
         resourceAvailH = FixedMes.total_Huamn_resource
         resourceAvailS = FixedMes.total_station_resource
         resourceAvailSpace = FixedMes.total_space_resource
@@ -217,8 +240,8 @@ class MyInit(object):
         allTasks[0].es = 0  # 活动1的最早开始时间设为0
         allTasks[0].ef = allTasks[0].es + allTasks[0].duration
 
-        for stage in range(0, len(priorityToUse)):
-            selectTaskID = priorityToUse[stage][0]
+        for stage in range(0, len(code)):
+            selectTaskID = code[stage][0]
             earliestStartTime = 0
 
             '''
@@ -232,7 +255,7 @@ class MyInit(object):
 
             startTime = earliestStartTime
             # 检查满足资源限量约束的时间点作为活动最早开始时间，即在这一时刻同时满足活动逻辑约束和资源限量约束
-            t = startTime
+            t = startTime+w
 
 
             recordH = [[] for _ in range(len(resourceAvailH))]
@@ -416,7 +439,7 @@ class MyInit(object):
 
                 # 若资源不够，则向后推一个单位时间
                 if renewFlag==False or ((resourceSumSpace < allTasks[selectTaskID].resourceRequestSpace).any()) or (resourceSumH < allTasks[selectTaskID].resourceRequestH).any() or (resourceSumS < allTasks[selectTaskID].resourceRequestS).any() :
-                        t += 1
+                        t += 0.1
                 else:
                     break
             # 若符合资源限量则将当前活动开始时间安排在这一时刻
@@ -472,8 +495,28 @@ class MyInit(object):
             # 局部调度计划ps
             ps.append(selectTaskID)
 
+            ACTS = copy.deepcopy(allTasks)
+            ACTS = sorted(ACTS.items(), key=lambda x: -x[1].ef)
+            if LR != "left":
+                maxtime = ACTS[0][1].ef
+                for act in allTasks.keys():
+                    tmp1 = allTasks[act].es
+                    tmp2 = allTasks[act].ef
+                    tmp3 = copy.deepcopy(allTasks[act].predecessor)
+                    tmp4 = copy.deepcopy(allTasks[act].successor)
+                    allTasks[act].es = (0 - tmp2) + maxtime
+                    allTasks[act].ef = (0 - tmp1) + maxtime
+                    allTasks[act].predecessor = tmp4
+                    allTasks[act].successor = tmp3
+
+            # 更新codes
+            for taskcode in codes[0]:
+                Id = taskcode[0]
+                codes[0][Id][1] = allTasks[Id].es
+                codes[1][Id][1] = allTasks[Id].ef
+
 if __name__ == '__main__':
-    m = MyInit("C:/Users/29639/Desktop/dis.csv","C:/Users/29639/Desktop/order.txt")
+    m = MyInit("C:/Users/29639/Desktop/sim/dis.csv","C:/Users/29639/Desktop/sim/dis.csv")
     m.InitPopulation()
     a=[[0,1,2],[[2,3,1]]]
     b=[[1,1,2],[[2,3,1]]]

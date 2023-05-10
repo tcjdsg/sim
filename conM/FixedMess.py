@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from chromosome.Chromo import Chromosome
-
+import numpy as np
 
 class FixedMes(object):
     """
@@ -9,6 +9,7 @@ class FixedMes(object):
     orderInputMes:
 
     """
+
     distance = [[]]
 
     numJzjPos = 18
@@ -140,6 +141,8 @@ class FixedMes(object):
                 [(0, 1), (1, 1),(0,1)]  # 16
                        ]
     #16位 为了让虚拟从1开始
+
+    import scipy.stats as stats
     OrderTime = [0,
                  3,#1
                  6,#2
@@ -149,14 +152,43 @@ class FixedMes(object):
                  10,#6
                  5,#7
                  3,
-                 3,
-                 3,
+                 4,
+                 4,
                  13,
                  8,
-                 1,
+                 2,
                  5,
                 5,
                  4]
+    sigma = 0.3
+
+
+    #定义每种任务的时间分布
+    OrderTimeB = [np.random.uniform(0,0),
+        stats.truncnorm((-0.5) / sigma, 0.5 / sigma, loc=OrderTime[1], scale=sigma),
+                  np.random.normal(OrderTime[1]-0.5, OrderTime[1]+0.5),
+
+                  stats.truncnorm((-0.8) / sigma, 0.8 / sigma, loc=OrderTime[2], scale=sigma),
+
+                  stats.truncnorm((-0.5) / sigma, 0.8 / sigma, loc=OrderTime[3], scale=sigma),
+                  np.random.normal(OrderTime[4]-0.5, OrderTime[4]+0.5),
+                  stats.truncnorm((-0.5) / sigma, 0.5 / sigma, loc=OrderTime[5], scale=sigma),
+                  stats.truncnorm((-0.8) / sigma, 0.8 / sigma, loc=OrderTime[6], scale=sigma),
+                  stats.truncnorm((-0.5) / sigma, 0.5 / sigma, loc=OrderTime[7], scale=sigma),
+                  stats.truncnorm((-0.5) / sigma, 0.5 / sigma, loc=OrderTime[8], scale=sigma),
+                  stats.truncnorm((-0.8) / sigma, 0.8 / sigma, loc=OrderTime[9], scale=sigma),
+                  stats.truncnorm((-0.5) / sigma, 0.5 / sigma, loc=OrderTime[10], scale=sigma),
+                  stats.truncnorm((-0.8) / sigma, 0.8 / sigma, loc=OrderTime[11], scale=sigma),
+                  np.random.normal(OrderTime[12] - 0.5, OrderTime[4] + 0.5),
+                  stats.truncnorm((-0.2) / sigma, 0.2 / sigma, loc=OrderTime[13], scale=sigma),
+                  stats.truncnorm((-0.8) / sigma, 0.8 / sigma, loc=OrderTime[14], scale=sigma),
+                  stats.truncnorm((-0.8) / sigma, 0.8 / sigma, loc=OrderTime[15], scale=sigma),
+                  stats.truncnorm((-0.8) / sigma, 0.8 / sigma, loc=OrderTime[16], scale=sigma),
+
+                  ]
+    #最大调度次数
+    shedule_num=0
+
     act_info={}
 
     lowTime = 120 #不能超过90 min
@@ -252,9 +284,13 @@ class FixedMes(object):
 
 
 
-
-
-
+if __name__ == "__main__":
+    import scipy.stats as stats
+    mu, sigma = 5, 0.7
+    lower, upper = mu - 2 * sigma, mu + 2 * sigma  # 截断在[μ-2σ, μ+2σ]
+    X = stats.truncnorm((lower - mu) / sigma, (upper - mu) / sigma, loc=mu, scale=sigma)
+    print(X.rvs())
+    print(X.rvs())
 
 
 

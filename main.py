@@ -32,7 +32,10 @@ def print_hi(name):
     # distance distance = dict(enumerate(Distance))
     New_distance = sorted(distance.items(), key=lambda x: x[1], reverse=True)
 
-
+    for m in range(len(a[0])):
+        # print("Varition",a[m])
+        if self.acts[a[0][m][0]].belong_plane_id == jzj:
+            poslist.append(m)
     print(iii.keys())
     print()
 

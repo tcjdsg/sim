@@ -1,7 +1,7 @@
 import copy
 import math
 from collections import defaultdict
-
+import random
 from Mythread.myInit import MyInit
 from draw.people import Draw_gantt
 from util import *
@@ -122,7 +122,7 @@ class MyRun(object):
             FixedMes.resver_k1[self.cur] = k1
             if num <=k1:
                 # 交叉
-                temp1,temp2 = self.cr(FixedMes.AllFit[two[0]],FixedMes.AllFit[two[1]])
+                temp1,temp2 = self.cr1(FixedMes.AllFit[two[0]],FixedMes.AllFit[two[1]])
 
             else:
                 temp1, temp2 = copy.deepcopy(FixedMes.AllFit[two[0]]), copy.deepcopy(FixedMes.AllFit[two[1]])
@@ -131,7 +131,29 @@ class MyRun(object):
             FixedMes.AllFitSon[num_sonfit]=temp2
             num_sonfit+=1
 
-    def cr(self,pop1,pop2):
+    def cr1(self,pop1,pop2):
+        a = copy.deepcopy(pop1)
+        b = copy.deepcopy(pop2)
+        pos1 = random.randint(1, self.acts -1)
+        pos2 = gen_randint(1, self.acts -1,pos1)
+
+
+        tempb1 = copy.deepcopy(b.codes[:pos1])
+        tempb2 = copy.deepcopy(b.codes[pos2:])
+        tempa1 = copy.deepcopy(a.codes[:pos1])
+        tempa2 = copy.deepcopy(a.codes[pos2:])
+        b.codes[:pos1] = tempa1
+        b.codes[pos2:] = tempa2
+
+        a.codes[:pos1] = tempb1
+        a.codes[pos2:] = tempb2
+        #
+        MyInit.fitness(a,[],[],[])
+        MyInit.fitness(b, [], [],[])
+
+        return a,b
+
+    def cr2(self,pop1,pop2):
         a = pop1.codes
         b =pop2.codes
         pos = random.randint(1, self.acts - 1)
@@ -181,7 +203,8 @@ class MyRun(object):
             k2 = int((k2 * 100) % 100)
             FixedMes.resver_k2[self.cur] = k2
             if num <= k2:
-                FixedMes.AllFitSon[i] = copy.deepcopy(self.var1(FixedMes.AllFitSon[i]))
+                opt = np.random.randint(1,FixedMes.Activity_num-1)
+                FixedMes.AllFitSon[i] = copy.deepcopy(self.insert(opt,FixedMes.AllFitSon[i]))
     '''
     子图拓扑排序
     '''
@@ -226,6 +249,94 @@ class MyRun(object):
             del newActs[random_Ei_0]
         return newcode
 
+    # def exchange0(self,pop):
+    #     opt = np.random.randint(1, FixedMes.Activity_num - 1)
+    #
+    #     cutoff =         preorder = activities[opt].predecessor
+    #     success = activities[opt].successor
+    #     randomint_plus(1, FixedMes.Activity_num - 1, cutoff=None, size=None)
+
+    def insert(self, opt,pop):
+        a=copy.deepcopy(pop)
+        self.inser(opt,a,FixedMes.act_info)
+        MyInit.fitness(a, [], [], [])
+        return a
+    def inser(self,opt,pop, activities):
+
+        preorder = activities[opt].predecessor
+        success = activities[opt].successor
+
+        ts = 0
+        es = 999
+        newcode = []
+        newcode.append(pop.codes[0][:opt] + pop.codes[0][opt + 1:])
+        newcode.append(pop.codes[1][:opt] + pop.codes[1][opt + 1:])
+
+        # 得到了
+        for id in preorder:
+            if activities[id].es > ts:
+                ts = activities[id].es
+
+        for id in success:
+            if activities[id].es < es:
+                es = activities[id].es
+
+        code = []
+
+        for time in newcode[0]:
+            if time[1] >= ts and time[1] <= es:
+                code.append(time)
+
+        qujian = sorted(code, key=lambda x: x[1])
+        optnow = np.random.choice([x for x in range(0, len(qujian) - 1)], 1, replace=False)[0]
+        time1 = qujian[optnow][1]
+        time2 = qujian[optnow + 1][1]
+
+        a = random.uniform(time1, time2)
+
+        pop.codes[0][opt] = [opt, a]
+        pop.codes[1][opt] = [opt, a + activities[opt].duration]
+    def exchange1(self,pop):
+
+        newpop = copy.deepcopy(pop)
+        a =newpop.codes
+
+        i = np.random.choice(self.jzjs, 1, replace=False)
+        jzj = i[0]
+
+        poslist = []  # 记录飞机i各工序在a中的位置
+        for m in range(len(a[0])):
+            # print("Varition",a[m])
+            if self.acts[a[0][m][0]].belong_plane_id == jzj:
+                poslist.append(m)
+
+        dr = np.random.choice([x for x in poslist], 5, replace=False)
+
+        for opt in dr:
+            self.inser(opt,newpop,FixedMes.act_info)
+
+        MyInit.fitness(newpop, [], [], [])
+        return newpop
+    def exchange2(self, pop):
+
+            newpop = copy.deepcopy(pop)
+            a = newpop.codes
+
+            i = np.random.choice(self.jzjs, 1, replace=False)
+            jzj = i[0]
+
+            poslist = []  # 记录飞机i各工序在a中的位置
+            for m in range(len(a[0])):
+                # print("Varition",a[m])
+                if self.acts[a[0][m][0]].belong_plane_id == jzj:
+                    poslist.append(m)
+
+            for opt in poslist:
+                self.inser(opt, newpop, self.acts)
+
+            MyInit.fitness(newpop, [], [], [])
+            return newpop
+
     def var1(self,pop):
 
         newpop = copy.deepcopy(pop)
@@ -240,7 +351,7 @@ class MyRun(object):
             if a[m][1] == jzj:
                 poslist.append(m)
 
-        dr = np.random.choice([x for x in range(4, 7)], 1, replace=False)[0]
+        dr = np.random.choice([x for x in range(4,9)], 1, replace=False)[0]
         TI = np.random.choice([x for x in range(1, FixedMes.planeOrderNum - 3 - dr)], 1, replace=False)
 
         Td = poslist[TI[0]:TI[0] + dr]
@@ -413,13 +524,14 @@ if __name__ == '__main__':
     run.select()
     run.Crossover()
     ppp=FixedMes.AllFitSon[0]
+    opt = np.random.randint(1, FixedMes.Activity_num - 1)
 
-    nwee = run.var1(ppp)
+    nwee = run.insert(opt,ppp)
     run.updata()
     m.fitness(nwee,[],[],[])
 
-
-    print(nwee.codes==ppp.codes)
+    #
+    # print(nwee.codes==ppp.codes)
 
 
 
