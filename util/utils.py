@@ -1,6 +1,10 @@
 import random
 
-import matplotlib as plt
+import matplotlib.pyplot  as plt
+
+from conM import FixedMess
+
+
 
 def getRandNum(start,end):
     return (random.random() *100000) % (end -start)
@@ -78,7 +82,6 @@ def randint_digit(low, high, cutoff):
             digit_list.remove(i)
 
     np.random.shuffle(digit_list)
-
     return digit_list.pop()  # 生成的序列打乱并且返回当前的随机值
 
 def gen_randint(low, high, discard):
@@ -211,10 +214,125 @@ def writeTxt(filename,content):
     with open(filename, 'w') as f:
         for i in content:
             f.write(i + '\n')
+# networkX_5c.py
+# Demo of critical path method(CPM) with NetworkX
+# Copyright 2021 YouCans, XUPT
+# Crated：2021-05-25
+# Youcans 原创作品：[Python数模笔记@Youcans](https://blog.csdn.net/youcans )
+
+def cpm(Activities):
+    edge = []
+    for activity in Activities:
+        id = activity.id
+        for toid in activity.successor:
+            edge.append((id,toid,activity.duration))
+
+
+
+    DG = nx.DiGraph()  # 创建：空的 有向图
+    DG.add_nodes_from(range(0, len(Activities)), VE=0, VL=0)
+    DG.add_weighted_edges_from(edge)
+
+    lenCriticalPath = nx.dag_longest_path_length(DG)  # 关键路径的长度
+
+    print("关键路径长度：{}".format(lenCriticalPath))  # 51
+
+    pos = {1: (0, 4), 2: (5, 8), 3: (5, 4), 4: (5, 0), 5: (10, 8), 6: (10, 0), 7: (15, 4), 8: (20, 4)}  # 指定顶点位置
+    nx.draw(DG, pos, with_labels=True, alpha=0.8)  # 绘制无向图
+    labels = nx.get_edge_attributes(DG, 'weight')
+    nx.draw_networkx_edge_labels(DG, pos, edge_labels=labels, font_color='c')  # 显示边的权值
+    plt.show()
+
+import networkx as nx
+def CPM(newedge):
+
+
+    idTime =[0.0 for i in range(FixedMess.FixedMes.Activity_num)]
+
+    for  _,activity in FixedMess.FixedMes.act_info.items():
+        if activity.taskid == 1:
+            idTime[activity.id] = 0
+        elif activity.taskid == FixedMess.FixedMes.planeOrderNum:
+            idTime[activity.id] = 0
+        else:
+            idTime[activity.id] = FixedMess.FixedMes.getTime(activity.taskid)
+
+    for i  in range(len(newedge)):
+            id = newedge[i][0]
+            to =newedge[i][1]
+            tu = (id, to, idTime[id])
+            newedge[i] = tu
+
+
+    DG = nx.DiGraph()  # 创建：空的 有向图
+    DG.add_nodes_from(range(0, FixedMess.FixedMes.Activity_num), VE=0, VL=0)
+    DG.add_weighted_edges_from(newedge)
+
+    lenNodes = len(DG.nodes)  # 顶点数量 YouCans
+    topoSeq = list(nx.topological_sort(DG))  # 拓扑序列: [1, 3, 4, 2, 5, 7, 6, 8]
+
+    lenCriticalPath = nx.dag_longest_path_length(DG)  # 关键路径的长度
+
+    return lenCriticalPath  # 51
+
+
+
+
+
+    # print("关键路径长度：{}".format(lenCriticalPath))
+
+
+    #
+    # # --- 计算各顶点的 VE：事件最早开始时间 ---
+    # VE = [0 for i in range(lenNodes)]  # 初始化 事件最早开始时间
+    # for i in range(lenNodes):
+    #     for e in DG.in_edges(topoSeq[i]):  # 遍历顶点 topoSeq[i] 的 入边
+    #         VEij = DG.nodes[e[0]]["VE"] + DG[e[0]][e[1]]['weight']  # 该路线的最早开始时间
+    #         if VEij > VE[i]: VE[i] = VEij  # 该路线所需时间更长
+    #     DG.add_node(topoSeq[i], VE=VE[i])  # 顶点（事件）的最早开始时间
+    #
+    # # --- 计算各顶点的 VL：事件最晚开始时间 ---
+    # revSeq = list(reversed(topoSeq))  # 翻转拓扑序列，以便从终点倒推计算 VL
+    # VL = [DG.nodes[revSeq[0]]["VE"] for i in range(lenNodes)]  # 初始化 事件最晚开始时间为 VE 最大值
+    # for i in range(lenNodes):
+    #     for e in DG.out_edges(revSeq[i]):  # 遍历顶点 revSeq[i] 的 出边
+    #         VLij = DG.nodes[e[1]]["VL"] - DG[e[0]][e[1]]['weight']  # 该路线的最晚开始时间
+    #         if VLij < VL[i]: VL[i] = VLij  # 该路线所需时间更长
+    #     DG.add_node(revSeq[i], VL=VL[i])  # 顶点（事件）的最晚开始时间
+    #
+    # # --- 计算各条边的 EE, EL：工序最早、最晚开始时间 ---
+    # cpDG = nx.DiGraph()  # 创建空的有向图, 保存关键路径
+    # print("\n边（工序）的最早开始时间 EE, 最晚开始时间 EL:")
+    # for e in DG.edges:  # 遍历有向图的边
+    #     DG[e[0]][e[1]]["EE"] = DG.nodes[e[0]]["VE"]  # 边的头顶点的 VE
+    #     # Wij = DG[e[0]][e[1]]['weight']
+    #     DG[e[0]][e[1]]["EL"] = DG.nodes[e[1]]["VL"] - DG[e[0]][e[1]]['weight']  # 边的尾顶点的 VL 减去边的权值
+    #     if DG[e[0]][e[1]]["EE"] == DG[e[0]][e[1]]["EL"]:  # 如果最早、最晚开工时间相同，则为关键路径上的边
+    #         cpDG.add_edge(e[0], e[1], weight=DG[e[0]][e[1]]['weight'])  # 加入 关键路径
+    #     print("\t工序 {}:\tEE= {}\tEL= {}".format(e, DG[e[0]][e[1]]["EE"], DG[e[0]][e[1]]["EL"]))
+    #
+    # lenCP = sum(cpDG[e[0]][e[1]]['weight'] for e in cpDG.edges)
+    # print("\n关键路径:{}".format(cpDG.edges))  # YouCans, XUPT
+    # print("关键路径长度:{}".format(lenCP))
+    #
+    # pos = {1: (0, 4), 2: (5, 8), 3: (5, 4), 4: (5, 0), 5: (10, 8), 6: (10, 0), 7: (15, 4), 8: (20, 4)}  # 指定顶点位置
+    # nx.draw(DG, with_labels=True, alpha=0.8)  # 绘制无向图
+    # labels = nx.get_edge_attributes(DG, 'weight')  # YouCans, XUPT
+    # nx.draw_networkx_edge_labels(DG, pos, edge_labels=labels, font_color='c')  # 显示边的权值
+    # nx.draw_networkx_edges(DG, pos, edgelist=cpDG.edges, edge_color='r', width=4)  # 设置指定边的颜色
+    plt.show()
+
+
+
+
+
+# Youcans 原创作品：[Python数模笔记@Youcans](https://blog.csdn.net/youcans )
 
 if __name__ == '__main__':
-    cotent=[]
-    cotent.append("2 3 4 ")
-    cotent.append("2 3 4")
-
-    writeTxt("1.txt", cotent)
+    import networkx as nx  # 导入 NetworkX 工具包
+    # cotent=[]
+    # cotent.append("2 3 4 ")
+    # cotent.append("2 3 4")
+    #
+    # writeTxt("1.txt", cotent)
+    cpm()

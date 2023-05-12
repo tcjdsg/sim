@@ -8,7 +8,7 @@ class Order(object):
      5.活动最早开始时间  6.活动最晚开始时间  7.活动是否被访问
     '''
 
-    def __init__(self, id,taskid, duration, resourceRequestH,resourceRequestS,resourceRequestSpace, successor,jzjId):
+    def __init__(self, id,taskid, duration, resourceRequestH, resourceRequestS, resourceRequestSpace, successor, jzjId):
         self.id = id
         self.taskid = taskid
         self.belong_plane_id = jzjId
@@ -29,12 +29,19 @@ class Order(object):
         self.complete = False
         self.HumanReady = True
         self.working = False
+        self.priority = 0
 
         self.TimeStart = 0
         self.TimeEnd = self.TimeStart + self.duration
         self.HumanNums = [] #执行任务的人员编号
+        self.SheiBei = []
         self.SNums = [] #执行任务编号
-
+    def __lt__(self, other):
+        return self.es < other.es
+    def __eq__(self, other):
+        return self.es == other.es
+    def __gt__(self, other):
+        return self.es > other.es
 
 class Activity(object):
     '''

@@ -1,3 +1,6 @@
+import copy
+
+
 class Space(object):
     def __init__(self,jzjId):
         self.type = jzjId
@@ -14,4 +17,7 @@ class Space(object):
 
     def update(self,Activity):
         # self.alreadyworkTime += Activity.duration
-        self.OrderOver.append(Activity)
+
+        self.alreadyworkTime += Activity.duration
+        self.OrderOver.append(copy.deepcopy(Activity))
+        self.OrderOver.sort(key=lambda x: x.es)

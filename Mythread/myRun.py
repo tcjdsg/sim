@@ -1,106 +1,64 @@
 import copy
 import math
-from collections import defaultdict
-import random
+
+from schedulePolicy.CreatCpc import newAON
 from Mythread.myInit import MyInit
-from draw.people import Draw_gantt
-from util import *
 from conM.FixedMess import *
 from util import utils
 from util.utils import *
 
 class MyRun(object):
     def __init__(self):
-        self.Pop = FixedMes.AllFit
+        # self.Pop = FixedMes.AllFit
         self.cur=0
         self.jzjs = FixedMes.jzjNumbers
         self.acts = FixedMes.Activity_num
-        self.allActInfo = FixedMes.act_info
+        # self.allActInfo = FixedMes.act_info
+        self.newNetwork =None
 
-    def RUN(self,i):
-        self.cur=i
-        print("----------- ----",i,"--------------")
+    def RUN(self):
+
+        # self.cur=i
+        # print("----------- ----",i,"--------------")
         self.select()
         # print("----------- select ----------")
         self.Crossover()
         # print("----------- Crossover ----------")
         self.Variation()
         # print("----------- Variation ----------")
-        self.updata()
+        # self.updata()
         # print("----------- updata ----------")
-        if i > FixedMes.ge-2:
-            NDset = fast_non_dominated_sort(FixedMes.AllFit)
-            Human = []
-            S = []
-            space=[]
-            h,s,sp=MyInit.fitness(NDset[0][0], Human, S,space)
-            # Draw_gantt(h)
+
+        # NDset = fast_non_dominated_sort(FixedMes.AllFit)
+        # Human = []
+        # Station = []
+        # space=[]
+        # h,s,sp,workTime = MyInit.fitness(NDset[0][0], Human, Station,space)
+
+
+        # Draw_gantt(h)
 
     def select(self):
-        pa_iter = [0,0]
+        pa_iter = [0, 0]
         for i in range(len(FixedMes.Paternal)):
             FixedMes.Paternal[i] = pa_iter
 
-        GNum = FixedMes.populationnumberson / 2
+        GNum = FixedMes.populationnumberson /2
         M = 0
-        arrSlect = [0,0,0,0]
 
         while GNum > M :
-
-             for i in range( len(arrSlect)) :
-                 arrSlect[i] = int(getRandNum(0, FixedMes.populationnumberson))
-
-             selctNum = self.pareto_compare(arrSlect, self.Pop)
-             flag = True
-             for Paternal in FixedMes.Paternal:
-                 if Paternal[0] == selctNum[0] and Paternal[1] == selctNum[1] \
-                        or (Paternal[0] == selctNum[1] and Paternal[1] == selctNum[0]):
-                            flag = False
-             if flag:
-                     FixedMes.Paternal[M] = [selctNum[0],selctNum[1]]
-                     M+=1
-
-        Summove = 0
-        SumTime = 0
-        SumVar = 0
-        SumDiv = 0
-
-        for i in FixedMes.AllFit :
-            Summove += i.movetime
-            SumTime += i.WorkTime
-            SumVar += i.variance
-
-        FixedMes.AverPopmove = Summove / len(FixedMes.AllFit)
-        FixedMes.AverPopTime = SumTime / len(FixedMes.AllFit)
-        FixedMes.AverPopVar = SumVar / len(FixedMes.AllFit)
-
-        for i in FixedMes.AllFit :
-            SumDiv +=math.pow(i.WorkTime+i.variance-FixedMes.AverPopTime-FixedMes.AverPopVar,2)
-
-        FixedMes.Diversity = math.sqrt(SumDiv / len(FixedMes.AllFit))
-        FixedMes.Avufit[self.cur] = [ FixedMes.AverPopTime ,FixedMes.AverPopVar,FixedMes.AverPopmove ]
-
-
-        # AverPopmove[number] = (int)(Summove / AllFit[number].length);
-        # AverPopTime[number] = (int)(SumTime / AllFit[number].length);
-        # AverPopVar[number] = (int)(SumVar / AllFit[number].length);
-        #
-        # for (Chromosome i: AllFit[number]) {
-        #     SumDiv += Math.pow(i.WorkTime + i.variance - AverPopTime[number] - AverPopVar[number], 2);
-        # }
-        # Diversity[number] = Math.sqrt(SumDiv / AllFit[number].length); // 越大
-        # 多样性越小
-        # 交换的组越多
-        # try {
-        # Avufit[number][GenarationIten[number]].movetime = AverPopmove[number];
-        # Avufit[number][GenarationIten[number]].WorkTime = AverPopTime[number];
-        # Avufit[number][GenarationIten[number]].variance = AverPopVar[number];
-        # } catch (Exception e) {
-        # System.out.println("error");
-        # }
+            arrSlect = np.random.randint(0, FixedMes.populationnumberson, 4)
+            selctNum = self.pareto_compare(arrSlect, self.Pop)
+            flag = True
+            for Paternal in FixedMes.Paternal:
+                if Paternal[0] == selctNum[0] and Paternal[1] == selctNum[1] \
+                            or (Paternal[0] == selctNum[1] and Paternal[1] == selctNum[0]):
+                                flag = False
+            if flag:
+                    FixedMes.Paternal[M] = [selctNum[0],selctNum[1]]
+                    M+=1
 
     def Crossover(self):
-
         num_sonfit=0
         ge = FixedMes.ge
 
@@ -135,8 +93,8 @@ class MyRun(object):
         a = copy.deepcopy(pop1)
         b = copy.deepcopy(pop2)
         pos1 = random.randint(1, self.acts -1)
-        pos2 = gen_randint(1, self.acts -1,pos1)
 
+        pos2 = gen_randint(1, self.acts -1,pos1)
 
         tempb1 = copy.deepcopy(b.codes[:pos1])
         tempb2 = copy.deepcopy(b.codes[pos2:])
@@ -148,8 +106,8 @@ class MyRun(object):
         a.codes[:pos1] = tempb1
         a.codes[pos2:] = tempb2
         #
-        MyInit.fitness(a,[],[],[])
-        MyInit.fitness(b, [], [],[])
+        # MyInit.fitness(a, [],[],[])
+        # MyInit.fitness(b, [], [],[])
 
         return a,b
 
@@ -157,7 +115,7 @@ class MyRun(object):
         a = pop1.codes
         b =pop2.codes
         pos = random.randint(1, self.acts - 1)
-        pos
+
         temp1 = copy.deepcopy(b[:pos])
         temp2 = copy.deepcopy(a[:pos])
         temp = copy.deepcopy(b[pos:])
@@ -205,6 +163,8 @@ class MyRun(object):
             if num <= k2:
                 opt = np.random.randint(1,FixedMes.Activity_num-1)
                 FixedMes.AllFitSon[i] = copy.deepcopy(self.insert(opt,FixedMes.AllFitSon[i]))
+
+    FixedMes.AllFit = FixedMes.AllFitSon
     '''
     子图拓扑排序
     '''
@@ -239,8 +199,7 @@ class MyRun(object):
             except:
                 print(duan_code)
                 print(newActs)
-            # self.taskid = taskid
-            # self.belong_plane_id = jzjId
+
             newcode.append([random_Ei_0, FixedMes.act_info[random_Ei_0].belong_plane_id, FixedMes.act_info[random_Ei_0].taskid])
             for key, Ei in newActs.items():
                 prece = newActs[key]
@@ -249,17 +208,10 @@ class MyRun(object):
             del newActs[random_Ei_0]
         return newcode
 
-    # def exchange0(self,pop):
-    #     opt = np.random.randint(1, FixedMes.Activity_num - 1)
-    #
-    #     cutoff =         preorder = activities[opt].predecessor
-    #     success = activities[opt].successor
-    #     randomint_plus(1, FixedMes.Activity_num - 1, cutoff=None, size=None)
-
     def insert(self, opt,pop):
         a=copy.deepcopy(pop)
         self.inser(opt,a,FixedMes.act_info)
-        MyInit.fitness(a, [], [], [])
+        # MyInit.fitness(a, [], [], [])
         return a
     def inser(self,opt,pop, activities):
 
@@ -315,7 +267,7 @@ class MyRun(object):
         for opt in dr:
             self.inser(opt,newpop,FixedMes.act_info)
 
-        MyInit.fitness(newpop, [], [], [])
+        # MyInit.fitness(newpop, [], [], [])
         return newpop
     def exchange2(self, pop):
 
@@ -334,7 +286,7 @@ class MyRun(object):
             for opt in poslist:
                 self.inser(opt, newpop, self.acts)
 
-            MyInit.fitness(newpop, [], [], [])
+            # MyInit.fitness(newpop, [], [], [])
             return newpop
 
     def var1(self,pop):
@@ -370,8 +322,6 @@ class MyRun(object):
             num = np.random.randint(number[-1] + 1, x2 - (dr - 2 - i))
             number.append(num)
             a.insert(num, newcode[i])
-
-
         num = number[-1]
         if (num + 1) < x2:
             number5 = np.random.randint(num + 1, x2 + 1)
@@ -379,7 +329,7 @@ class MyRun(object):
         if (num + 1) == x2:
             number5 = x2
             a.insert(number5, newcode[-1])
-        MyInit.fitness(newpop,[],[],[])
+        # MyInit.fitness(newpop,[],[],[])
         return newpop
     # def var2(self,pop):
     #
@@ -428,56 +378,20 @@ class MyRun(object):
         self.movetime = 9999.0
     '''
     def pareto_compare(self,arrSlect,pop):
-        reres = [0,0]
+        reres = [0, 0]
         lenn = len(arrSlect)
         arrCh = [copy.deepcopy(pop[i]) for i in arrSlect]
-        arrCh.sort(key=lambda x: x.rank)
-
-        if arrCh[1].rank != arrCh[2].rank:
-            for i in range(lenn):
-                if pop[arrSlect[i]].codes==arrCh[0].codes:
-                    reres[0] = arrSlect[i]
-                elif pop[arrSlect[i]].codes ==arrCh[1].codes:
-                    reres[1] =arrSlect[i]
-
-            return reres
-
-        arrCh.sort(key=lambda x:x.WorkTime)
-
-        arrCh[0].crowding_distance = arrCh[lenn - 1].crowding_distance = 0xffffff
-
-        m_min = arrCh[0].WorkTime #找出这一层最大值和最小值
-
-        m_max = arrCh[lenn - 1].WorkTime
-        for j in range(1,lenn-1) :# 计算拥挤距离
-            if m_max - m_min == 0:
-
-                arrCh[j].crowding_distance += 0xffffff
-            else:
-                arrCh[j].crowding_distance += (arrCh[j + 1].WorkTime - arrCh[j - 1].WorkTime) / (
-                        m_max - m_min)
+        arrCh.sort(key=lambda x: x.zonghe)
 
 
-        arrCh.sort(key=lambda x:x.variance)
-        m_min = arrCh[0].variance  # 找出这一层最大值和最小值
-
-        m_max = arrCh[lenn - 1].variance
-        for j in range(1, lenn - 1):  # 计算拥挤距离
-            if m_max - m_min == 0:
-
-                arrCh[j].crowding_distance += 0xffffff
-            else:
-                arrCh[j].crowding_distance += (arrCh[j + 1].variance - arrCh[j - 1].variance) / (
-                        m_max - m_min)
-
-        arrCh.sort(key=lambda x:(x.rank,x.crowding_distance))
         for i in range(lenn):
             if pop[arrSlect[i]].codes == arrCh[0].codes:
-                reres[0] = arrSlect[i]
+                    reres[0] = arrSlect[i]
             elif pop[arrSlect[i]].codes == arrCh[1].codes:
-                reres[1] = arrSlect[i]
+                    reres[1] = arrSlect[i]
 
         return reres
+
 
     def updata(self):
         lenn=0
@@ -516,6 +430,8 @@ class MyRun(object):
         FixedMes.AllFit = copy.deepcopy(self.Pop)
         print("time is ", self.Pop[0].f[0])
         print("var is", self.Pop[0].f[1])
+
+
 
 if __name__ == '__main__':
     m = MyInit("C:/Users/29639/Desktop/sim/dis.csv","C:/Users/29639/Desktop/sim/dis.csv")

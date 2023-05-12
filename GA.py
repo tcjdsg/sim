@@ -22,68 +22,63 @@ class Ga(object):
         Num = self.humanNum
         dataEdge = Edge()
         dcNextAll = []
-
         dc=self.first(dataEdge)
-
-
-        while self.DCmin>0:
-            self.DCmin-=1
-            oldHuman = copy.deepcopy(FixedMes.total_Huamn_resource)
-            Num = Num+1
-            dcNext = [math.inf for i in range(FixedMes.Human_resource_type)]
-            chnext = [Chromosome() for i in range(FixedMes.Human_resource_type)]
-            dcNextIndex = [math.inf,math.inf]
-            bestc = Chromosome()
-
-            diff = math.inf
-
-
-            for k in range(FixedMes.Human_resource_type):
-
-                self.Init.InitPopulation()
-                FixedMes.total_Huamn_resource[k] = oldHuman[k]+1
-                print("各类型人员组成: ",FixedMes.total_Huamn_resource)
-                for it in range(self.pa.ge):
-                    self.run.RUN(it)
-                    if it > 0:
-                        print("---第{}代----Time:{}---avr:{}---move:{}---".format(it, round(self.pa.Avufit[it][0], 1),
-                                                                            self.pa.Avufit[it][1],
-                                                                           round(self.pa.Avufit[it][2], 1)))
-                chromosomes = self.saveFor0Best()
-                for ch in chromosomes:
-                    cont = ch.WorkTime*FixedMes.targetWeight[0]+ch.variance*FixedMes.targetWeight[1]+ch.movetime*FixedMes.targetWeight[2]
-                    # print(cont , )
-                    if cont< dcNext[k]:
-                        dcNext[k] = cont
-                        chnext[k] = ch
-
-                if (dcNext[k] < dcNextIndex[1]):
-                     dcNextIndex[0] = k
-                     dcNextIndex[1] = dcNext[k]
-                     bestc = copy.deepcopy(chnext[k])
-
-                FixedMes.total_Huamn_resource[k] = oldHuman[k]
-
-            FixedMes.total_Huamn_resource[int(dcNextIndex[0])]+=1
-            dcNextAll.append(dcNext)
-            diff = dc - int (dcNextIndex[1])
-            dc = int (dcNextIndex[1])
-
-            print("边际增益----------：",diff)
-
-            dataEdge.edgeSum.append(dc)
-            dataEdge.edgeUp.append(diff)
-            dataEdge.it.append(dataEdge.it[-1] + 1)
-            dataEdge.worktime.append(bestc.WorkTime)
-            dataEdge.var.append(bestc.variance)
-
-            dataEdge.movetime.append(bestc.movetime)
-
-            dataEdge.gene.append(bestc.codes)
-            dataEdge.group.append(copy.deepcopy(FixedMes.total_Huamn_resource))
-
-        self.writeArrayList(dcNextAll,Num)
-        self.writedataEdge(dataEdge,Num)
+        # while self.DCmin>0:
+        #     self.DCmin-=1
+        #     oldHuman = copy.deepcopy(FixedMes.total_Huamn_resource)
+        #     Num = Num+1
+        #     dcNext = [math.inf for i in range(FixedMes.Human_resource_type)]
+        #     chnext = [Chromosome() for i in range(FixedMes.Human_resource_type)]
+        #     dcNextIndex = [math.inf,math.inf]
+        #     bestc = Chromosome()
+        #
+        #     diff = math.inf
+        #     for k in range(FixedMes.Human_resource_type):
+        #
+        #         self.Init.InitPopulation()
+        #         FixedMes.total_Huamn_resource[k] = oldHuman[k]+1
+        #         print("各类型人员组成: ",FixedMes.total_Huamn_resource)
+        #         for it in range(self.pa.ge):
+        #             self.run.RUN(it)
+        #             if it > 0:
+        #                 print("---第{}代----Time:{}---avr:{}---move:{}---".format(it, round(self.pa.Avufit[it][0], 1),
+        #                                                                     self.pa.Avufit[it][1],
+        #                                                                    round(self.pa.Avufit[it][2], 1)))
+        #         chromosomes = self.saveFor0Best()
+        #         for ch in chromosomes:
+        #             cont = ch.WorkTime*FixedMes.targetWeight[0]+ch.variance*FixedMes.targetWeight[1]+ch.movetime*FixedMes.targetWeight[2]
+        #             # print(cont , )
+        #             if cont< dcNext[k]:
+        #                 dcNext[k] = cont
+        #                 chnext[k] = ch
+        #
+        #         if (dcNext[k] < dcNextIndex[1]):
+        #              dcNextIndex[0] = k
+        #              dcNextIndex[1] = dcNext[k]
+        #              bestc = copy.deepcopy(chnext[k])
+        #
+        #         FixedMes.total_Huamn_resource[k] = oldHuman[k]
+        #
+        #     FixedMes.total_Huamn_resource[int(dcNextIndex[0])]+=1
+        #     dcNextAll.append(dcNext)
+        #     diff = dc - int (dcNextIndex[1])
+        #     dc = int (dcNextIndex[1])
+        #
+        #     print("边际增益----------：",diff)
+        #
+        #     dataEdge.edgeSum.append(dc)
+        #     dataEdge.edgeUp.append(diff)
+        #     dataEdge.it.append(dataEdge.it[-1] + 1)
+        #     dataEdge.worktime.append(bestc.WorkTime)
+        #     dataEdge.var.append(bestc.variance)
+        #
+        #     dataEdge.movetime.append(bestc.movetime)
+        #
+        #     dataEdge.gene.append(bestc.codes)
+        #     dataEdge.group.append(copy.deepcopy(FixedMes.total_Huamn_resource))
+        #
+        # self.writeArrayList(dcNextAll,Num)
+        # self.writedataEdge(dataEdge,Num)
 
     def first(self,dataEdge):
         self.Init.InitPopulation()

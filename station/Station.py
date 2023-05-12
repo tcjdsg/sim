@@ -1,3 +1,5 @@
+import copy
+
 from activity.Activitity import Activity, Order
 from conM.FixedMess import FixedMes
 
@@ -19,7 +21,8 @@ class Station:
 
     def update(self,Activity):
         self.alreadyworkTime += Activity.duration
-        self.OrderOver.append(Activity)
+        self.OrderOver.append(copy.deepcopy(Activity))
+        self.OrderOver.sort(key=lambda x: x.es)
 
 
 
