@@ -2,10 +2,8 @@
 class Chromosome():
     def __init__(self):
         self.codes = []
-        self.WorkTime = 9999
-
+        self.WorkTime = 999999999
         self.variance = 9999.0
-
         self.movetime = 9999.0
 
         self.Maxfagiue = 0

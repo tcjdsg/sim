@@ -58,7 +58,6 @@ class bso(object):
         self.current_evolve_times = i
 
         self.clustering()
-            # 生成新个体
         self.newIndividualGenerate()
 
         FixedMes.AllFitSon = self.nSolutions
@@ -123,7 +122,7 @@ class bso(object):
     def getdistance(self,t1,t2):
         res=0.0
         for i in range(self.dimension):
-            res+=(t1.WorkTime - t2.WorkTime)*(t1.WorkTime - t2.WorkTime)
+            res+=(t1.zonghe - t2.zonghe)*(t1.zonghe - t2.zonghe)
 
         return math.sqrt(res)
 
@@ -168,11 +167,11 @@ class bso(object):
 
     def getCenter(self):
         for i in range(self.number_of_clusters):
-            bestValue = 9999999999999999
+            bestValue = 99999999999999999
             centerIndex = -1
             l = self.cluster[i]
             for j in range(len(l)):
-                curV = self.Pop[l[j]].WorkTime
+                curV = self.Pop[l[j]].zonghe
                 if curV<bestValue:
                     bestValue =curV
                     centerIndex = l[j]

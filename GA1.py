@@ -26,11 +26,8 @@ class Ga(object):
         self.cur=i
         # print("----------- ----",i,"--------------")
         self.select()
-        # print("----------- select ----------")
         self.Crossover()
-        # print("----------- Crossover ----------")
         self.Variation()
-        # print("----------- Variation ----------")
 
         # print("----------- updata ----------")
 
@@ -50,7 +47,7 @@ class Ga(object):
         M = 0
 
         while GNum > M:
-            arrSlect = random.sample(range(0, FixedMes.populationnumberson), 4)
+            arrSlect = random.sample(range(0, FixedMes.populationnumberson),4)
             selctNum = self.pareto_compare(arrSlect, self.Pop)
             flag = True
             for Paternal in FixedMes.Paternal:
@@ -430,53 +427,31 @@ class Ga(object):
         lenn = len(arrSlect)
         arrCh = [copy.deepcopy(pop[i]) for i in arrSlect]
         # arrCh.sort(key=functools.cmp_to_key(judgeFitness))
-        arrCh.sort(key=lambda x:x.rank)
 
-        if arrCh[1].rank!=arrCh[2].rank:
+        flag = judgeFitness(arrCh[0],arrCh[1])
+        if flag==-1:
+            arrCh[0] = arrCh[0]
+        else:
+            arrCh[0] = arrCh[1]
 
-            for i in range(lenn):
+        flag = judgeFitness(arrCh[2], arrCh[3])
+
+        if flag == -1:
+            arrCh[1] = arrCh[2]
+        else:
+            arrCh[1] = arrCh[3]
+
+        for i in range(lenn):
                 if pop[arrSlect[i]].codes == arrCh[0].codes:
                      reres[0] = arrSlect[i]
                 elif pop[arrSlect[i]].codes == arrCh[1].codes:
                      reres[1] = arrSlect[i]
 
-            return reres
-
-        arrCh.sort(key=lambda x:-x.Pr)
-
-        arrCh[0].crowding_distance = arrCh[lenn - 1].crowding_distance = 0xffffff
-
-        m_min = -arrCh[0].Pr #找出这一层最大值和最小值
-
-        m_max = -arrCh[lenn - 1].Pr
-        for j in range(1,lenn-1) :# 计算拥挤距离
-            if m_max - m_min == 0:
-
-                arrCh[j].crowding_distance += 0xffffff
-            else:
-                arrCh[j].crowding_distance += (-arrCh[j + 1].Pr + arrCh[j - 1].Pr) / (
-                        m_max - m_min)
-
-        arrCh.sort(key=lambda x:x.Ecmax)
-        m_min = arrCh[0].Ecmax  # 找出这一层最大值和最小值
-
-        m_max = arrCh[lenn - 1].Ecmax
-        for j in range(1, lenn - 1):  # 计算拥挤距离
-            if m_max - m_min == 0:
-
-                arrCh[j].crowding_distance += 0xffffff
-            else:
-                arrCh[j].crowding_distance += (arrCh[j + 1].Ecmax - arrCh[j - 1].Ecmax) / (
-                        m_max - m_min)
-
-        arrCh.sort(key=lambda x:(x.rank,x.crowding_distance))
-        for i in range(lenn):
-            if pop[arrSlect[i]].codes == arrCh[0].codes:
-                reres[0] = arrSlect[i]
-            elif pop[arrSlect[i]].codes == arrCh[1].codes:
-                reres[1] = arrSlect[i]
-
         return reres
+
+
+
+
 
     def updata(self):
         lenn = 0

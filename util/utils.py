@@ -255,8 +255,8 @@ def CPM(newedge):
         elif activity.taskid == FixedMess.FixedMes.planeOrderNum:
             idTime[activity.id] = 0
         else:
-            # idTime[activity.id] = round(FixedMess.FixedMes.getTime(activity.taskid) *100,1)
-            idTime[activity.id] = FixedMess.FixedMes.OrderTime[activity.taskid]
+            idTime[activity.id] = round(FixedMess.FixedMes.getTime(activity.taskid) *100,1)
+            #idTime[activity.id] = FixedMess.FixedMes.OrderTime[activity.taskid]
 
     for i  in range(len(newedge)):
             id = newedge[i][0]
@@ -274,7 +274,7 @@ def CPM(newedge):
 
     lenCriticalPath = nx.dag_longest_path_length(DG)  # 关键路径的长度
 
-    return lenCriticalPath  # 51
+    return lenCriticalPath/100  # 51
 
 def judgeFitness(pop1, pop2):
         Cmax = FixedMes.lowTime
