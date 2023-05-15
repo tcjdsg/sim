@@ -1,4 +1,5 @@
 import copy
+import functools
 import math
 import numpy as np
 from util import utils
@@ -12,7 +13,7 @@ from util.utils import *
 import random
 
 class Ga(object):
-    def __init__(self,dis_file,order_file):
+    def __init__(self):
         # self.Init = myInit.MyInit(dis_file,order_file)
         self.pa = FixedMess.FixedMes
         self.acts = FixedMes.Activity_num
@@ -20,8 +21,8 @@ class Ga(object):
         self.DCmin=10
         self.humanNum = self.pa.humanNum
 
-    def RUN(self,i):
-        self.Pop = FixedMes.AllFit
+    def RUN(self,i,pop):
+        self.Pop = pop
         self.cur=i
         # print("----------- ----",i,"--------------")
         self.select()
@@ -30,7 +31,7 @@ class Ga(object):
         # print("----------- Crossover ----------")
         self.Variation()
         # print("----------- Variation ----------")
-        # self.updata()
+
         # print("----------- updata ----------")
 
         # NDset = fast_non_dominated_sort(FixedMes.AllFit)
@@ -38,7 +39,6 @@ class Ga(object):
         # Station = []
         # space=[]
         # h,s,sp,workTime = MyInit.fitness(NDset[0][0], Human, Station,space)
-
         # Draw_gantt(h)
 
     def select(self):
@@ -60,7 +60,6 @@ class Ga(object):
             if flag:
                 FixedMes.Paternal[M] = [selctNum[0], selctNum[1]]
                 M += 1
-
     def Crossover(self):
         num_sonfit = 0
         ge = FixedMes.ge
@@ -171,7 +170,7 @@ class Ga(object):
                 opt = np.random.randint(1, FixedMes.Activity_num - 1)
                 FixedMes.AllFitSon[i] = copy.deepcopy(self.var1(FixedMes.AllFitSon[i]))
 
-    FixedMes.AllFit = copy.deepcopy(FixedMes.AllFitSon)
+    # FixedMes.AllFit = copy.deepcopy(FixedMes.AllFitSon)
     '''
     子图拓扑排序
     '''
@@ -362,8 +361,6 @@ class Ga(object):
             print(Td)
 
 
-
-
         # MyInit.fitness(newpop,[],[],[])
         return newpop
 
@@ -414,17 +411,71 @@ class Ga(object):
         self.movetime = 9999.0
     '''
 
-    def pareto_compare(self, arrSlect, pop):
+    # def pareto_compare(self, arrSlect, pop):
+    #     reres = [0, 0]
+    #     lenn = len(arrSlect)
+    #     arrCh = [copy.deepcopy(pop[i]) for i in arrSlect]
+    #
+    #     arrCh.sort(key=lambda x: x.zonghe)
+    #
+    #     for i in range(lenn):
+    #         if pop[arrSlect[i]].codes == arrCh[0].codes:
+    #             reres[0] = arrSlect[i]
+    #         elif pop[arrSlect[i]].codes == arrCh[1].codes:
+    #             reres[1] = arrSlect[i]
+    #     return reres
+    #
+    def pareto_compare(self,arrSlect,pop):
         reres = [0, 0]
         lenn = len(arrSlect)
         arrCh = [copy.deepcopy(pop[i]) for i in arrSlect]
-        arrCh.sort(key=lambda x: x.zonghe)
+        # arrCh.sort(key=functools.cmp_to_key(judgeFitness))
+        arrCh.sort(key=lambda x:x.rank)
 
+        if arrCh[1].rank!=arrCh[2].rank:
+
+            for i in range(lenn):
+                if pop[arrSlect[i]].codes == arrCh[0].codes:
+                     reres[0] = arrSlect[i]
+                elif pop[arrSlect[i]].codes == arrCh[1].codes:
+                     reres[1] = arrSlect[i]
+
+            return reres
+
+        arrCh.sort(key=lambda x:-x.Pr)
+
+        arrCh[0].crowding_distance = arrCh[lenn - 1].crowding_distance = 0xffffff
+
+        m_min = -arrCh[0].Pr #找出这一层最大值和最小值
+
+        m_max = -arrCh[lenn - 1].Pr
+        for j in range(1,lenn-1) :# 计算拥挤距离
+            if m_max - m_min == 0:
+
+                arrCh[j].crowding_distance += 0xffffff
+            else:
+                arrCh[j].crowding_distance += (-arrCh[j + 1].Pr + arrCh[j - 1].Pr) / (
+                        m_max - m_min)
+
+        arrCh.sort(key=lambda x:x.Ecmax)
+        m_min = arrCh[0].Ecmax  # 找出这一层最大值和最小值
+
+        m_max = arrCh[lenn - 1].Ecmax
+        for j in range(1, lenn - 1):  # 计算拥挤距离
+            if m_max - m_min == 0:
+
+                arrCh[j].crowding_distance += 0xffffff
+            else:
+                arrCh[j].crowding_distance += (arrCh[j + 1].Ecmax - arrCh[j - 1].Ecmax) / (
+                        m_max - m_min)
+
+        arrCh.sort(key=lambda x:(x.rank,x.crowding_distance))
         for i in range(lenn):
             if pop[arrSlect[i]].codes == arrCh[0].codes:
                 reres[0] = arrSlect[i]
             elif pop[arrSlect[i]].codes == arrCh[1].codes:
                 reres[1] = arrSlect[i]
+
         return reres
 
     def updata(self):
@@ -436,34 +487,27 @@ class Ga(object):
                 break
 
             lenn += 1
-        humanState = []
-        stationState = []
-        orderState = defaultdict(list)
-
-        # for i in range(lenn):
-        #     # def fitness(self,iter,Humans,Stations):
-        #     MyInit.fitness(FixedMes.AllFitSon[i],humanState,stationState)
 
         self.update_NSGA()
 
     def update_NSGA(self):
         R_pop = copy.deepcopy(FixedMes.AllFitSon + FixedMes.AllFit)
         NDset = fast_non_dominated_sort(R_pop)
-        self.Pop = []
+        Pop = []
         j = 0
-        while len(self.Pop) + len(NDset[j]) <= FixedMes.populationnumberson:  # until parent population is filled
-            self.Pop.extend(NDset[j])
+        while len(Pop) + len(NDset[j]) <= FixedMes.populationnumberson:  # until parent population is filled
+            Pop.extend(NDset[j])
             j += 1
-        if len(self.Pop) < FixedMes.populationnumberson:
+        if len(Pop) < FixedMes.populationnumberson:
             Ds = crowding_distance(copy.copy(NDset[j]))  # calcalted crowding-distance
             k = 0
-            while len(self.Pop) < FixedMes.populationnumberson:
-                self.Pop.append(NDset[j][Ds[k]])
+            while len(Pop) < FixedMes.populationnumberson:
+                Pop.append(NDset[j][Ds[k]])
                 k += 1
 
-        FixedMes.AllFit = copy.deepcopy(self.Pop)
-        print("time is ", self.Pop[0].f[0])
-        print("var is", self.Pop[0].f[1])
+        FixedMes.AllFit = copy.deepcopy(Pop)
+        # print("time is ", self.Pop[0].f[0])
+        # print("var is", self.Pop[0].f[1])
 
         # dc=self.first(dataEdge)
 

@@ -33,11 +33,11 @@ class FixedMes(object):
     jzjNumbers=[1,2,3,4,5,6,7,8]  #舰载机编号
 
 
-    Human_resource_type = 1 #先考虑只有一类人
+    Human_resource_type = 4 #先考虑只有一类人
 
     #先不考虑技能匹配。。就十几个人
-    # total_Huamn_resource = [4, 5, 9, 12]  # 每种人员数量
-    total_Huamn_resource = [30]
+    total_Huamn_resource = [4, 5, 9, 12]  # 每种人员数量
+    # total_Huamn_resource = [30]
     constraintOrder = defaultdict(lambda: []) #记录每类人的可作用工序，和可作用舰载机范围
     constraintOrder[0] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 
@@ -148,10 +148,10 @@ class FixedMes(object):
 
     transferrate = 0.2
     transfer_iter = 50
-    human_walk_speed = 80 #人员行走速度8 m/(in)
+    human_walk_speed = 800000 #人员行走速度8 m/(in)
 
-    populationnumber = 20
-    ge = 6
+    populationnumber = 40
+    ge = 10
 
     threadNum = 1
     populationnumberson = populationnumber
@@ -171,19 +171,14 @@ class FixedMes(object):
     slect_F_step_alone = [[] for _ in range(populationnumber)]
     # slect_F_step = [[] for _ in range(populationnumber)]
 
-
     Paternal = [[0,0] for _ in range(int(populationnumber/2))]
-
     #每一代的平均值
     Avufit = {}
-
     AverPopmove = 0
     AverPopTime = 0
     AverPopVar = 0
     Diversity = 0.0
-
     keyChainOrder = []
-
     #死锁辅助检查列表
     # dealLockList=[[0 for _ in range(Activity_num)] for _ in range(Activity_num)]
 

@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot  as plt
 
 from conM import FixedMess
-
+from conM.FixedMess import FixedMes
 
 
 def getRandNum(start,end):
@@ -97,9 +97,9 @@ def Dominate(Pop1, Pop2):
     :param Pop2:
     :return: If Pop1 dominate Pop2, return True
     '''
-    if (Pop1.f[0] < Pop2.f[0] and Pop1.f[1] < Pop2.f[1]) or \
-            (Pop1.f[0] <= Pop2.f[0] and Pop1.f[1] < Pop2.f[1]) or \
-            (Pop1.f[0] < Pop2.f[0] and Pop1.f[1] <= Pop2.f[1]):
+    if (Pop1.f[0] > Pop2.f[0] and Pop1.f[1] < Pop2.f[1]) or \
+            (Pop1.f[0] >= Pop2.f[0] and Pop1.f[1] < Pop2.f[1]) or \
+            (Pop1.f[0] > Pop2.f[0] and Pop1.f[1] <= Pop2.f[1]):
         return True
     else:
         return False
@@ -111,7 +111,7 @@ def crowding_distance(NDSet):
     for i in range(len(NDSet)):
         NDSet_obj[i] = NDSet[i].f
 
-    ND = sorted(NDSet_obj.items(), key=lambda x: (x[1][0],x[1][1]))
+    ND = sorted(NDSet_obj.items(), key=lambda x: (-x[1][0],x[1][1]))
 
     Distance[ND[0][0]] = 1e+20
     NDSet[0].c_distance = 1e+20
@@ -255,7 +255,8 @@ def CPM(newedge):
         elif activity.taskid == FixedMess.FixedMes.planeOrderNum:
             idTime[activity.id] = 0
         else:
-            idTime[activity.id] = FixedMess.FixedMes.getTime(activity.taskid)
+            # idTime[activity.id] = round(FixedMess.FixedMes.getTime(activity.taskid) *100,1)
+            idTime[activity.id] = FixedMess.FixedMes.OrderTime[activity.taskid]
 
     for i  in range(len(newedge)):
             id = newedge[i][0]
@@ -275,52 +276,30 @@ def CPM(newedge):
 
     return lenCriticalPath  # 51
 
+def judgeFitness(pop1, pop2):
+        Cmax = FixedMes.lowTime
+        if pop1.WorkTime < Cmax and pop2.WorkTime < Cmax:
+            if pop1.Pr > pop2.Pr:
+                return -1
+            elif pop1.Pr < pop2.Pr:
+                return 1
+            else:
+                if pop1.Ecmax < pop2.Ecmax:
+                    return -1
+                else:
+                    return 1
+
+        elif pop1.WorkTime > Cmax and pop2.WorkTime < Cmax:
+            return 1
+        elif pop1.WorkTime < Cmax and pop2.WorkTime > Cmax:
+            return -1
+        elif pop1.WorkTime > Cmax and pop2.WorkTime > Cmax:
+            if pop1.WorkTime > pop2.WorkTime:
+                return -1
+            if pop1.WorkTime < pop2.WorkTime:
+                return 0
 
 
-
-
-    # print("关键路径长度：{}".format(lenCriticalPath))
-
-
-    #
-    # # --- 计算各顶点的 VE：事件最早开始时间 ---
-    # VE = [0 for i in range(lenNodes)]  # 初始化 事件最早开始时间
-    # for i in range(lenNodes):
-    #     for e in DG.in_edges(topoSeq[i]):  # 遍历顶点 topoSeq[i] 的 入边
-    #         VEij = DG.nodes[e[0]]["VE"] + DG[e[0]][e[1]]['weight']  # 该路线的最早开始时间
-    #         if VEij > VE[i]: VE[i] = VEij  # 该路线所需时间更长
-    #     DG.add_node(topoSeq[i], VE=VE[i])  # 顶点（事件）的最早开始时间
-    #
-    # # --- 计算各顶点的 VL：事件最晚开始时间 ---
-    # revSeq = list(reversed(topoSeq))  # 翻转拓扑序列，以便从终点倒推计算 VL
-    # VL = [DG.nodes[revSeq[0]]["VE"] for i in range(lenNodes)]  # 初始化 事件最晚开始时间为 VE 最大值
-    # for i in range(lenNodes):
-    #     for e in DG.out_edges(revSeq[i]):  # 遍历顶点 revSeq[i] 的 出边
-    #         VLij = DG.nodes[e[1]]["VL"] - DG[e[0]][e[1]]['weight']  # 该路线的最晚开始时间
-    #         if VLij < VL[i]: VL[i] = VLij  # 该路线所需时间更长
-    #     DG.add_node(revSeq[i], VL=VL[i])  # 顶点（事件）的最晚开始时间
-    #
-    # # --- 计算各条边的 EE, EL：工序最早、最晚开始时间 ---
-    # cpDG = nx.DiGraph()  # 创建空的有向图, 保存关键路径
-    # print("\n边（工序）的最早开始时间 EE, 最晚开始时间 EL:")
-    # for e in DG.edges:  # 遍历有向图的边
-    #     DG[e[0]][e[1]]["EE"] = DG.nodes[e[0]]["VE"]  # 边的头顶点的 VE
-    #     # Wij = DG[e[0]][e[1]]['weight']
-    #     DG[e[0]][e[1]]["EL"] = DG.nodes[e[1]]["VL"] - DG[e[0]][e[1]]['weight']  # 边的尾顶点的 VL 减去边的权值
-    #     if DG[e[0]][e[1]]["EE"] == DG[e[0]][e[1]]["EL"]:  # 如果最早、最晚开工时间相同，则为关键路径上的边
-    #         cpDG.add_edge(e[0], e[1], weight=DG[e[0]][e[1]]['weight'])  # 加入 关键路径
-    #     print("\t工序 {}:\tEE= {}\tEL= {}".format(e, DG[e[0]][e[1]]["EE"], DG[e[0]][e[1]]["EL"]))
-    #
-    # lenCP = sum(cpDG[e[0]][e[1]]['weight'] for e in cpDG.edges)
-    # print("\n关键路径:{}".format(cpDG.edges))  # YouCans, XUPT
-    # print("关键路径长度:{}".format(lenCP))
-    #
-    # pos = {1: (0, 4), 2: (5, 8), 3: (5, 4), 4: (5, 0), 5: (10, 8), 6: (10, 0), 7: (15, 4), 8: (20, 4)}  # 指定顶点位置
-    # nx.draw(DG, with_labels=True, alpha=0.8)  # 绘制无向图
-    # labels = nx.get_edge_attributes(DG, 'weight')  # YouCans, XUPT
-    # nx.draw_networkx_edge_labels(DG, pos, edge_labels=labels, font_color='c')  # 显示边的权值
-    # nx.draw_networkx_edges(DG, pos, edgelist=cpDG.edges, edge_color='r', width=4)  # 设置指定边的颜色
-    plt.show()
 
 
 
@@ -328,11 +307,4 @@ def CPM(newedge):
 
 # Youcans 原创作品：[Python数模笔记@Youcans](https://blog.csdn.net/youcans )
 
-if __name__ == '__main__':
-    import networkx as nx  # 导入 NetworkX 工具包
-    # cotent=[]
-    # cotent.append("2 3 4 ")
-    # cotent.append("2 3 4")
-    #
-    # writeTxt("1.txt", cotent)
-    cpm()
+

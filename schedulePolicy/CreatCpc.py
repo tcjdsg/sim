@@ -48,19 +48,28 @@ def add(edge, OrderOver):
 from conM.FixedMess import FixedMes
 
 class PSGS():
-    def __init__(self,total_renew_resource,Activities):
+    def __init__(self,total_renew_resource,newedge):
         self.total_renew_resource = total_renew_resource
-        self.Activities = Activities
+        self.newedge = newedge
         self.running= queue.PriorityQueue()
         self.already =[]
         self.waiting =queue.PriorityQueue()
         self.nowTime=0
+        self.IdTime = []
 
 
 
     def start(self):
-        for activity in self.Activities:
-            activity.duration = FixedMes.getTime(activity.id)
+        self.idTime = [0.0 for i in range(FixedMess.FixedMes.Activity_num)]
+
+        for _, activity in FixedMess.FixedMes.act_info.items():
+            if activity.taskid == 1:
+                self.idTime[activity.id] = 0
+            elif activity.taskid == FixedMess.FixedMes.planeOrderNum:
+                self.idTime[activity.id] = 0
+            else:
+                # idTime[activity.id] = round(FixedMess.FixedMes.getTime(activity.taskid) *100,1)
+                self.idTime[activity.id] = FixedMess.FixedMes.OrderTime[activity.taskid]
 
     def addWaiting(self,cloneA):
         Ei_0=[]

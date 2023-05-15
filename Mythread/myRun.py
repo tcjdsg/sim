@@ -1,4 +1,5 @@
 import copy
+import functools
 import math
 
 from schedulePolicy.CreatCpc import newAON
@@ -381,9 +382,7 @@ class MyRun(object):
         reres = [0, 0]
         lenn = len(arrSlect)
         arrCh = [copy.deepcopy(pop[i]) for i in arrSlect]
-        arrCh.sort(key=lambda x: x.zonghe)
-
-
+        arrCh.sort(key=functools.cmp_to_key(judgeFitness))
         for i in range(lenn):
             if pop[arrSlect[i]].codes == arrCh[0].codes:
                     reres[0] = arrSlect[i]
