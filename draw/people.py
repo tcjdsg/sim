@@ -21,7 +21,7 @@ def Draw1(all_people):
                    plt.barh(number, time2 - time1-0.1,
                      left=time1, color=colors[job])
                 news = str(gongxu)
-                infmt = '(' + str(job ) + ',' + news + str(id)+')'
+                infmt = '(' + str(job ) + ',' + news +')'
                 if (time2 - time1)!=0:
                    plt.text(x=time1, y=number-0.1 , s=infmt, fontsize=8,
                        color='white')

@@ -5,12 +5,7 @@ import random
 from collections import defaultdict
 
 import numpy as np
-
-from  Mythread.myInit import MyInit
 from activity.Activitity import Order
-
-from conM.FixedMess import FixedMes
-from draw.people import Draw_gantt
 from human.Human import Human
 
 

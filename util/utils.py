@@ -10,7 +10,50 @@ def getRandNum(start,end):
     return (random.random() *100000) % (end -start)
 
 import numpy as np
+import copy
 
+def findW(D, total_resource, P):
+    W = []
+    useNowResource = [0 for i in range(len(total_resource))]
+
+    for k in range(len(total_resource)):
+        for p in P:
+            useNowResource[k] = useNowResource[k] + p.resources[k]
+
+    tempuseNowResource = copy.deepcopy(useNowResource)
+
+    for task in D:
+        for k in range(len(useNowResource)):
+            if tempuseNowResource[k] > total_resource[k]:
+                break
+        flag = True
+        for k in range(len(useNowResource)):
+            if tempuseNowResource[k] + task.resources[k] > total_resource[k]:
+                flag = False
+                break
+        if flag == True:
+            W.append(task)
+
+            for k in range(len(useNowResource)):
+                tempuseNowResource[k] += task.resources[k]
+    W.sort(key=lambda x: x.priority)
+    return W
+
+
+def conditionCheck(allltasks, AON, code, s):
+    D = []
+    for i in code:
+        if i in s:
+            continue
+        flag = True
+        prenumber = AON[i]  # 前序
+        for ordernumber in prenumber:
+            if ordernumber not in s:
+                flag = False
+                break
+        if flag == True:
+            D.append(allltasks[i - 1])
+    return D
 def randomint_plus(low, high=None, cutoff=None, size=None):
     """用来生成不包含一些中间数值的随机整数或序列
 

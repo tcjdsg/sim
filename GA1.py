@@ -2,6 +2,8 @@ import copy
 import functools
 import math
 import numpy as np
+import torch
+
 from util import utils
 from Mythread import myRun,myInit
 from chromosome.Chromo import Chromosome
@@ -39,25 +41,43 @@ class Ga(object):
         # Draw_gantt(h)
 
     def select(self):
-        pa_iter = [0, 0]
+
+        fitness = []
+        for p in self.Pop:
+            fitness.append(p.WorkTime)
+
+        fitness = np.array(fitness)
+        p = []
+        secret_p = 1.5  # 选择压力
+        torch_f = torch.from_numpy(fitness)
+        sorted, indices = torch.sort(torch_f, dim=0, descending=True)
+        sorted = sorted.numpy()
+        for i in range(len(fitness)):
+            for j in range(len(sorted)):
+                if fitness[i] == sorted[j]:
+                    p.append([j + 1])
+                    break
+
+        p = np.array(p)
+        fitness = 2 - secret_p + (2 * (p - 1) * (secret_p - 1)) / (len(self.Pop) - 1)
+        s = sum(fitness)
+        p = [fitness[i] / s for i in range(len(fitness))]
+        index = []
+        # 通过赌盘法选择NP个染色体
+        for i in range(len(self.Pop)):
+            cum = 0
+            m = random.random()
+            for j in range(len(self.Pop)):
+                cum += p[j]
+                if cum >= m:
+                    index.append(j)
+                    break
+
         for i in range(len(FixedMes.Paternal)):
-            FixedMes.Paternal[i] = pa_iter
-
-        GNum = FixedMes.populationnumberson/2
-        M = 0
-
-        while GNum > M:
-            arrSlect = random.sample(range(0, FixedMes.populationnumberson),4)
-            selctNum = self.pareto_compare(arrSlect, self.Pop)
-            flag = True
-            for Paternal in FixedMes.Paternal:
-                if Paternal[0] == selctNum[0] and Paternal[1] == selctNum[1] \
-                        or (Paternal[0] == selctNum[1] and Paternal[1] == selctNum[0]):
-                    flag = False
-            if flag:
-                FixedMes.Paternal[M] = [selctNum[0], selctNum[1]]
-                M += 1
+            two = np.random.choice(index, 2, False)
+            FixedMes.Paternal[i] = two
     def Crossover(self):
+
         num_sonfit = 0
         ge = FixedMes.ge
 
@@ -135,19 +155,16 @@ class Ga(object):
                     temp2 = np.concatenate((temp2, [tempx[k]]))
                     break
         # print(i,i+1,len(temp2))
-        pop1.codes = temp1.tolist()
-        # MyInit.fitness(pop1, [], [], [])
-        pop2.codes = temp2.tolist()
-        # MyInit.fitness(pop2, [], [], [])
+        pop11 = Chromosome()
+        pop11.codes = temp1.tolist()
+        pop22 = Chromosome()
+        pop22.codes = temp2.tolist()
 
-        return pop1, pop2
+        return pop11, pop22
 
     def Variation(self):
         ge = FixedMes.ge
         for i in range(len(FixedMes.AllFitSon)):
-            if FixedMes.AllFitSon[i] is None or FixedMes.AllFitSon[i].WorkTime == 0 \
-                    or FixedMes.AllFitSon[i].WorkTime > 999:
-                break
 
             k2 = 0
             if self.cur <= FixedMes.AgenarationIten:
@@ -164,7 +181,6 @@ class Ga(object):
             k2 = int((k2 * 100) % 100)
             # FixedMes.resver_k2[self.cur] = k2
             if num <= k2:
-                opt = np.random.randint(1, FixedMes.Activity_num - 1)
                 FixedMes.AllFitSon[i] = copy.deepcopy(self.var1(FixedMes.AllFitSon[i]))
 
     # FixedMes.AllFit = copy.deepcopy(FixedMes.AllFitSon)
@@ -213,12 +229,6 @@ class Ga(object):
             del newActs[random_Ei_0]
         return newcode
 
-    # def exchange0(self,pop):
-    #     opt = np.random.randint(1, FixedMes.Activity_num - 1)
-    #
-    #     cutoff =         preorder = activities[opt].predecessor
-    #     success = activities[opt].successor
-    #     randomint_plus(1, FixedMes.Activity_num - 1, cutoff=None, size=None)
 
     def insert(self, opt, pop):
         a = copy.deepcopy(pop)
@@ -422,73 +432,24 @@ class Ga(object):
     #             reres[1] = arrSlect[i]
     #     return reres
     #
-    def pareto_compare(self,arrSlect,pop):
-        reres = [0, 0]
-        lenn = len(arrSlect)
-        arrCh = [copy.deepcopy(pop[i]) for i in arrSlect]
-        # arrCh.sort(key=functools.cmp_to_key(judgeFitness))
-
-        flag = judgeFitness(arrCh[0],arrCh[1])
-        if flag==-1:
-            arrCh[0] = arrCh[0]
-        else:
-            arrCh[0] = arrCh[1]
-
-        flag = judgeFitness(arrCh[2], arrCh[3])
-
-        if flag == -1:
-            arrCh[1] = arrCh[2]
-        else:
-            arrCh[1] = arrCh[3]
-
-        for i in range(lenn):
-                if pop[arrSlect[i]].codes == arrCh[0].codes:
-                     reres[0] = arrSlect[i]
-                elif pop[arrSlect[i]].codes == arrCh[1].codes:
-                     reres[1] = arrSlect[i]
-
-        return reres
-
-
 
 
 
     def updata(self):
-        lenn = 0
 
-        for i in range(len(FixedMes.AllFitSon)):
-            if FixedMes.AllFitSon[i] is None or FixedMes.AllFitSon[i].WorkTime == 0 \
-                    or FixedMes.AllFitSon[i].WorkTime > 999:
-                break
 
-            lenn += 1
+        # lenn = 0
+        #
 
-        self.update_NSGA()
+        FixedMes.AllFit=sorted(FixedMes.AllFit,key=lambda x:x.WorkTime)
+        best = copy.deepcopy(FixedMes.AllFit[0])
+        FixedMes.AllFitSon=sorted(FixedMes.AllFitSon, key=lambda x: -x.WorkTime)
 
-    def update_NSGA(self):
-        R_pop = copy.deepcopy(FixedMes.AllFitSon + FixedMes.AllFit)
-        NDset = fast_non_dominated_sort(R_pop)
-        Pop = []
-        j = 0
-        while len(Pop) + len(NDset[j]) <= FixedMes.populationnumberson:  # until parent population is filled
-            Pop.extend(NDset[j])
-            j += 1
-        if len(Pop) < FixedMes.populationnumberson:
-            Ds = crowding_distance(copy.copy(NDset[j]))  # calcalted crowding-distance
-            k = 0
-            while len(Pop) < FixedMes.populationnumberson:
-                Pop.append(NDset[j][Ds[k]])
-                k += 1
-
-        FixedMes.AllFit = copy.deepcopy(Pop)
-        # print("time is ", self.Pop[0].f[0])
-        # print("var is", self.Pop[0].f[1])
+        bad = copy.deepcopy(FixedMes.AllFitSon[0])
+        FixedMes.AllFit = copy.deepcopy(FixedMes.AllFitSon)
+        FixedMes.AllFit[0] = copy.deepcopy(best)
 
         # dc=self.first(dataEdge)
-
-
-
-
 
     def writeArrayList(self,dcNextAll , nowHuman):
         ds = "output/paretoFor0" + nowHuman + ".txt"

@@ -12,7 +12,7 @@ import copy
 import math
 import random
 from collections import defaultdict
-
+from util.utils import *
 import numpy as np
 
 from chromosome.Chromo import Chromosome
@@ -344,22 +344,38 @@ class MyInit(object):
                                       recordH[type].append(human)
 
                 renewFlag = True
-                for type in range(len(resourceAvailS)):
-                    if allTasks[selectTaskID].resourceRequestS[type] > 0:
-                        renewFlag = True
-                        for station in stations[type]:
-                            # 找到当前所有正在工作的设备，计算资源占用数
-                            for taskIndex in range(len(station.OrderOver)):
-                                renewActivity = station.OrderOver[taskIndex]
-
-                                # 说明此刻油料等资源在使用
-                                if t > renewActivity.es and t < renewActivity.ef:
-                                    resourceSumNew[type] += 1  # 该类资源占用+1
-                                    break
-
-                        if resourceSumNew[type] >= FixedMes.total_renew_resource[type]:
-                            renewFlag = False  # 满了
-                            break #这个时间不可用
+                # for type in range(len(resourceAvailS)):
+                #     if allTasks[selectTaskID].resourceRequestS[type] > 0:
+                #         renewFlag = True
+                #         for station in stations[type]:
+                #             if (len(station.OrderOver) == 0):
+                #                     resourceSumNew[type] += 1  # 该类资源可用+1
+                #             if (len(station.OrderOver) == 1):
+                #                     Activity1 = station.OrderOver[0]
+                #                     if (Activity1.ef) <= t \
+                #                             or (t + dur) <= (Activity1.es):
+                #                         resourceSumNew[type] += 1  # 该类资源可用+1
+                #             if (len(station.OrderOver) >= 2):
+                #                     flag = False
+                #                     for taskIndex in range(len(station.OrderOver) - 1):
+                #                         Activity1 = station.OrderOver[taskIndex]
+                #                         Activity2 = station.OrderOver[taskIndex + 1]
+                #                         if (Activity1.ef) <= t \
+                #                                 and (t + dur) <= (Activity2.es):
+                #                             resourceSumNew[type] += 1  # 该类资源可用+1
+                #                             flag = True
+                #
+                #                     if flag == False:
+                #                         Activity1 = station.OrderOver[-1]
+                #                         Activity2 = station.OrderOver[0]
+                #                         if (Activity1.ef) <= t or (t + dur) <= Activity2.es:
+                #                             resourceSumNew[type] += 1
+                #         #可用资源有多少：
+                #         remian = max(FixedMes.total_renew_resource[type]-FixedMes.total_station_resource[type],0)
+                #
+                #         if remian+resourceSumNew[type] < allTasks[selectTaskID].resourceRequestS[type]:
+                #             renewFlag = False  # 满了
+                #             break #这个时间不可用
 
                 for type in range(len(resourceAvailS)):
                     if allTasks[selectTaskID].resourceRequestS[type]>0:
@@ -398,15 +414,14 @@ class MyInit(object):
                                           resourceSumS[type] += 1
                                           recordS[type].append(station)
 
-
                 # 若资源不够，则向后推一个单位时间
                 if (renewFlag == False) or ((resourceSumSpace < allTasks[selectTaskID].resourceRequestSpace).any()) or (resourceSumH < allTasks[selectTaskID].resourceRequestH).any() or (resourceSumS < allTasks[selectTaskID].resourceRequestS).any() :
-                        t += 0.1
+                        t = round(t + 0.1,1)
                 else:
                     break
             # 若符合资源限量则将当前活动开始时间安排在这一时刻
-            allTasks[selectTaskID].es = t
-            allTasks[selectTaskID].ef = t + dur
+            allTasks[selectTaskID].es = round(t,1)
+            allTasks[selectTaskID].ef = round(t+dur,1)
 
             for type in range(len(resourceAvailH)):
 
@@ -761,38 +776,81 @@ class MyInit(object):
 
         return allTasks
 
-    # @staticmethod
-    # def parellGenerationScheme(allTasks, codes, humans, stations, spaces, LR):
-    #
-    #     code = codes
-    #     #
-    #     # if LR == "left":
-    #     #     code = sorted(codes[0], key=lambda x: x[1])
-    #     # else:
-    #     #     code = sorted(codes[1], key=lambda x: -x[1])
-    #     #     maxtime = allTasks[code[0][0]].ef
-    #     #     for act in allTasks.keys():
-    #     #         tmp1 = allTasks[act].es
-    #     #         tmp2 = allTasks[act].ef
-    #     #         tmp3 = copy.deepcopy(allTasks[act].predecessor)
-    #     #         tmp4 = copy.deepcopy(allTasks[act].successor)
-    #     #         allTasks[act].es = (0 - tmp2) + maxtime
-    #     #         allTasks[act].ef = (0 - tmp1) + maxtime
-    #     #         allTasks[act].predecessor = tmp4
-    #     #         allTasks[act].successor = tmp3
+    @staticmethod
+    def parellGenerationScheme(allTasks, codes, humans,stations,spaces,LR):
+        S = []  # 已完工任务
+        s = []
+        P = []  # 在制任务
+        D = []  # 待完成任务
+        t = 0
+        AON = defaultdict(list)
+        for task in allTasks:
+            id = task.id
+            pre = task.predecessor
+            AON[id] = pre
+        total_resource = [0 for i in range(len(FixedMes.total_Huamn_resource + FixedMes.total_station_resource + FixedMes.total_space_resource))]
+        priority = [ i for i in range(FixedMes.Activity_num)]
+        while True:
+            # 更新任务集
+            D = conditionCheck(allTasks, AON, priority, s)
+            # 找到不冲突任务集W
+            while True:
+                W = findW(D, total_resource, P)
+
+                if len(W) > 0:
+                    taskj = W[0]
+                    taskj.s = t
+                    taskj.f = t + taskj.run_time
+                    P.append(taskj)
+                    D.remove(taskj)
+                    s.append(taskj.id)
+                else:
+                    break
+
+            P.sort(key=lambda x: x.f)
+            taski = P[0]
+            S.append(taski)
+            t = taski.f
+            P.remove(taski)
+            for otherp in P:
+                if otherp.f == t:
+                    P.remove(otherp)
+                    S.append(otherp)
+            if len(S) == len(allTasks):
+                break
+
+    @staticmethod
+    def parellGenerationScheme(allTasks, codes, humans, stations, spaces, LR):
+
+        code = codes
+        #
+        if LR == "left":
+            code = sorted(codes[0], key=lambda x: x[1])
+        else:
+            code = sorted(codes[1], key=lambda x: -x[1])
+            maxtime = allTasks[code[0][0]].ef
+            for act in allTasks.keys():
+                tmp1 = allTasks[act].es
+                tmp2 = allTasks[act].ef
+                tmp3 = copy.deepcopy(allTasks[act].predecessor)
+                tmp4 = copy.deepcopy(allTasks[act].successor)
+                allTasks[act].es = (0 - tmp2) + maxtime
+                allTasks[act].ef = (0 - tmp1) + maxtime
+                allTasks[act].predecessor = tmp4
+                allTasks[act].successor = tmp3
     #
     #     # 记录资源转移
-    #     resourceAvailH = FixedMes.total_Huamn_resource
-    #     resourceAvailS = FixedMes.total_station_resource
-    #     resourceAvailSpace = FixedMes.total_space_resource
-    #
-    #     ps = [0]  # 局部调度计划初始化
-    #     en = [codes[i][0] for i in range(FixedMes.Activity_num)] # 等待完成
-    #
-    #     allTasks[0].es = 0  # 活动1的最早开始时间设为0
-    #     allTasks[0].ef = allTasks[0].es + allTasks[0].duration
-    #
-    #     manzu = []
+        resourceAvailH = FixedMes.total_Huamn_resource
+        resourceAvailS = FixedMes.total_station_resource
+        resourceAvailSpace = FixedMes.total_space_resource
+
+        ps = [0]  # 局部调度计划初始化
+        en = [codes[i][0] for i in range(FixedMes.Activity_num)] # 等待完成
+
+        allTasks[0].es = 0  # 活动1的最早开始时间设为0
+        allTasks[0].ef = allTasks[0].es + allTasks[0].duration
+
+        manzu = []
     #
     #
     #
