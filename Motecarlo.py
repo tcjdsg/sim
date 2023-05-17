@@ -10,7 +10,7 @@ from conM.FixedMess import FixedMes
 
 from schedulePolicy.CreatCpc import PSGS, newAON
 
-
+#这个好像确实要比遗传算法好一点。。。
 class BigSim():
     def __init__(self,dis_file,order_file):
         self.dis_file = dis_file

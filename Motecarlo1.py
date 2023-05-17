@@ -2,8 +2,6 @@
 from BSO import bso
 from draw import people
 from draw.people import Draw, Draw1
-from util.utils import *
-from GA1 import Ga
 from Mythread import myInit
 from conM.FixedMess import FixedMes
 

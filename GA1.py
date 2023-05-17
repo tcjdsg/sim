@@ -31,14 +31,7 @@ class Ga(object):
         self.Crossover()
         self.Variation()
 
-        # print("----------- updata ----------")
 
-        # NDset = fast_non_dominated_sort(FixedMes.AllFit)
-        # Human = []
-        # Station = []
-        # space=[]
-        # h,s,sp,workTime = MyInit.fitness(NDset[0][0], Human, Station,space)
-        # Draw_gantt(h)
 
     def select(self):
 
@@ -108,7 +101,6 @@ class Ga(object):
             num_sonfit += 1
             FixedMes.AllFitSon[num_sonfit] = temp2
             num_sonfit += 1
-
     def cr1(self, pop1, pop2):
         a = copy.deepcopy(pop1)
         b = copy.deepcopy(pop2)
@@ -131,7 +123,6 @@ class Ga(object):
         # MyInit.fitness(b, [], [],[])
 
         return a, b
-
     def cr2(self, pop1, pop2):
         a = pop1.codes
         b = pop2.codes
@@ -161,7 +152,6 @@ class Ga(object):
         pop22.codes = temp2.tolist()
 
         return pop11, pop22
-
     def Variation(self):
         ge = FixedMes.ge
         for i in range(len(FixedMes.AllFitSon)):
@@ -228,8 +218,6 @@ class Ga(object):
                     prece.remove(random_Ei_0)
             del newActs[random_Ei_0]
         return newcode
-
-
     def insert(self, opt, pop):
         a = copy.deepcopy(pop)
         self.inser(opt, a, FixedMes.act_info)
@@ -436,10 +424,6 @@ class Ga(object):
 
 
     def updata(self):
-
-
-        # lenn = 0
-        #
 
         FixedMes.AllFit=sorted(FixedMes.AllFit,key=lambda x:x.WorkTime)
         best = copy.deepcopy(FixedMes.AllFit[0])

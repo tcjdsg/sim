@@ -47,8 +47,6 @@ class FixedMes(object):
     constraintOrder[2] = [7, 8, 14,16]
     constraintOrder[3] = [6, 9, 10, 11,12,13,15]
 
-
-
     modeflag = 0 #0是单机、1是全甲板，这里考虑全甲板，如果是全甲板
     # constraintJZJ = defaultdict(lambda: []) #保障人员可作用舰载机范围,两种模式，单机或者全甲板
 

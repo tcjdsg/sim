@@ -66,13 +66,7 @@ class bso(object):
     def updata(self):
             p = FixedMes.AllFit
             p = sorted(p,key = lambda x: x.WorkTime)
-            # left = p[:int(0.3*len(p))]
-            # right =[]
-            # for i in range(len(FixedMes.AllFit)-len(left)):
-            #     newObject = Chromosome()
-            #     newObject.codes = self.init.encoder()
-            #     right.append(newObject)
-            # FixedMes.AllFit = left +right
+
 
     def clustering(self):
         self.clusterCenterIndex=[]
@@ -93,10 +87,9 @@ class bso(object):
                 if i!=0:
                     for j in range(0,i):
                         m = i-1-j
-                        if self.getdistance(self.Pop[centerIndex],self.Pop[self.clusterCenterIndex[m]])<0.0001:
+                        if self.getdistance(self.Pop[centerIndex],self.Pop[self.clusterCenterIndex[m]])<0:
                             flag=True
                             break
-
                 if flag==True:
                     continue
                 #如果类中心既未重复也未距离其他类中心太近，跳出循环
@@ -123,14 +116,12 @@ class bso(object):
                 label = self.getIndividualOfCluster(pop1)
                 self.cluster[label].append(i)
             newVar =  self.getVar()
-
     def getdistance(self,t1,t2):
         res=0.0
         for i in range(self.dimension):
             res+=(t1.WorkTime - t2.WorkTime)*(t1.WorkTime - t2.WorkTime)
 
         return math.sqrt(res)
-
     def getIndividualOfCluster(self,t):
         label =0
         mindistance = self.getdistance(t,self.Pop[self.clusterCenterIndex[0]])
@@ -141,7 +132,6 @@ class bso(object):
                 label = i
 
         return label
-
     def getVar(self):
         var=0.0
         for i in range(self.number_of_clusters):
@@ -150,7 +140,6 @@ class bso(object):
                 var +=self.getdistance(self.Pop[self.clusterCenterIndex[i]],self.Pop[l[j]])
 
         return var
-
     def getMeans(self):
         # 清空上次聚类的质心残留
         self.meansList.clear()
@@ -183,6 +172,7 @@ class bso(object):
 
             self.clusterCenterIndex[i] = centerIndex
     def newIndividualGenerate1(self):
+        self.nSolutions = []
 
         #    判断是否需要随机挑选出来一个类中心去替换掉
         #    这是一种发散操作
@@ -308,7 +298,6 @@ class bso(object):
             clusterIndex = np.random.randint(0,self.number_of_clusters)
             T = Chromosome()
             T.codes = self.init.encoder()
-
             replacedObjectIndex = self.clusterCenterIndex[clusterIndex]
             #择优保留
             self.Pop[replacedObjectIndex] = T
